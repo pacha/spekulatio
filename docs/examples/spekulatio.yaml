@@ -1,0 +1,27 @@
+layers:
+  - path: templates/spekulatio.yaml
+  - path: content/spekulatio.yaml
+    values:
+      this: 1
+      that: 2
+path: .
+transformations:
+  - name: Md2Html
+  - name: Sass2Css
+    patterns:
+      - "*.scss"
+      - "*.sass"
+  - name: OptimizeJpeg
+    patterns:
+      - "^static/img/[^/]+\.jpe?g$"
+    pattern_type: regex
+    output_filename_template: "{{ input_file.with_suffix('.jpeg').name }}"
+  - name: MyCustomTransformation
+    package: "my_package"
+  - name: Copy
+values:
+  foo: 1
+  bar: 2
+default_values:
+  spam: 100
+  eggs: 200

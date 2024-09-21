@@ -1,0 +1,61 @@
+[project]
+name = "spekulatio"
+version = "0.1.0"
+authors = [
+    {name="Andrés Sopeña Pérez", email="code@ehmm.org"},
+]
+description = "Transform directories based on rules."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "cels",
+    "py-walk",
+    "pyyaml",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/pacha/spekulatio"
+"Bug Tracker" = "https://github.com/pacha/spekulatio/issues"
+
+[project.optional-dependencies]
+dev = [
+  "spekulatio[tests,type-checks,code-formatting]",
+]
+tests = [
+  "pytest",
+  "pyyaml",
+]
+type-checks = [
+  "mypy",
+  "types-pyyaml",
+]
+code-formatting = [
+  "black",
+]
+publish = [
+  "build",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+log_cli = false
+log_cli_level = "DEBUG"
+log_cli_format = "%(message)s"
+filterwarnings = ["ignore::FutureWarning"]
+
+[tool.mypy]
+ignore_missing_imports = true
