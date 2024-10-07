@@ -8,12 +8,9 @@ Example displaying all fields:
     layers:
       - path: /path/to/some/other/spekulatio.yaml
         mount_at: some/folder
-        values:
-          bg_color: #A583C3
     path: .
-    preset: website
-    rules:
-      - action: MD2HTML
+    actions:
+      - name: Md2Html
         package: spekulatio
         patterns:
         - "*.md"
@@ -25,8 +22,6 @@ Example displaying all fields:
             - fenced_code
     values:
       foo: 1
-    default_values:
-      bar: 100
 
 ### `layers` (List | Optional | Default: [])
 
