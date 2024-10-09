@@ -8,6 +8,7 @@ from spekulatio.exceptions import SpekulatioValidationError
 
 def test_action_create():
     action = Action.from_dict({
+        "name": "Copy",
         "patterns": ["*.jpeg", "*.jpg"],
         "parameters": {
             "foo": 1,
@@ -21,12 +22,14 @@ def test_action_create():
 def test_action_create_fail():
     with pytest.raises(SpekulatioValidationError):
         _ = Action.from_dict({
+            "name": "Copy",
             "patterns": ["*.txt"],
             "foo": "bar",
         })
 
 def test_action_match():
     action = Action.from_dict({
+        "name": "Render",
         "patterns": ["*.txt", "foo/*/bar.md"],
     })
     assert action.match("this.txt")
@@ -37,6 +40,7 @@ def test_action_match():
 
 def test_action_output_name():
     action = Action.from_dict({
+        "name": "Md2Html",
         "patterns": ["*.md"],
         "output_name_template": "{{ path.with_suffix('.html').name }}",
     })

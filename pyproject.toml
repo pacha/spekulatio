@@ -17,6 +17,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    "click",
     "cels",
     "py-walk",
     "pyyaml",
@@ -46,6 +47,9 @@ code-formatting = [
 publish = [
   "build",
 ]
+
+[project.scripts]
+spekulatio = "spekulatio.commands:spekulatio"
 
 [build-system]
 requires = ["hatchling"]

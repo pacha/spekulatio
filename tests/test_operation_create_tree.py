@@ -25,11 +25,11 @@ def test_create_tree(fixtures_path):
     root = create_tree([layer])
 
     # check node types
-    assert root["this"].is_dir()
-    assert root["this"]["that"].is_dir()
-    assert root["this"]["that"]["dir1"].is_dir()
-    assert not root["this"]["that"]["foo.md"].is_dir()
-    assert not root["this"]["that"]["dir1"]["baz.txt"].is_dir()
+    assert root["this"].is_dir
+    assert root["this"]["that"].is_dir
+    assert root["this"]["that"]["dir1"].is_dir
+    assert not root["this"]["that"]["foo.md"].is_dir
+    assert not root["this"]["that"]["dir1"]["baz.txt"].is_dir
 
     # check number of nodes
     assert len(root.children) == 1

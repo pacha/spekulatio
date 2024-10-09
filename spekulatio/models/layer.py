@@ -1,4 +1,3 @@
-
 from dataclasses import field
 from dataclasses import dataclass
 from typing import Any
@@ -8,10 +7,12 @@ from schema import And
 from schema import Schema
 from schema import Optional
 
-from spekulatio.models import Node
-from spekulatio.models.actions import create_dir_action
+from spekulatio.lib.paths import to_relative_path
 from spekulatio.exceptions import SpekulatioValidationError
+from .node import Node
 from .action import Action
+from .actions import create_dir_action
+
 
 @dataclass
 class Layer:
@@ -21,23 +22,36 @@ class Layer:
     values: dict[Any, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(
+        cls,
+        data: dict,
+        path_prefix: Path = Path("."),
+        mount_at_prefix: Path = Path("."),
+    ):
         """Create an instance object from a data dictionary."""
         try:
-            schema = Schema({
-                "path": And(str, len, error="'path' should be a non-empty string."),
-                Optional("mount_at"): And(str, error="'mount_at' should be a string."),
-                Optional("actions"): And(list, error="'actions' should be a list."),
-                Optional("values"): And(dict, error="'values' should be a dictionary."),
-            })
+            schema = Schema(
+                {
+                    Optional("path"): And(
+                        str, len, error="'path' should be a non-empty string."
+                    ),
+                    Optional("mount_at"): And(
+                        str, len, error="'mount_at' should be a non-empty string."
+                    ),
+                    Optional("actions"): And(list, error="'actions' should be a list."),
+                    Optional("values"): And(
+                        dict, error="'values' should be a dictionary."
+                    ),
+                }
+            )
             init_data = schema.validate(data)
         except Exception as err:
             raise SpekulatioValidationError(f"Wrong configuration: {err}")
 
         # cast to proper types
-        if 'path' in init_data:
+        if "path" in init_data:
             try:
-                init_data['path'] = Path(init_data['path'])
+                init_data["path"] = path_prefix / Path(init_data["path"])
             except Exception as err:
                 raise SpekulatioValidationError(
                     f"Invalid path '{init_data['path']}': {err}"
@@ -51,20 +65,22 @@ class Layer:
                     f"Layer path '{init_data['path']}' must be a directory"
                 )
 
-        if 'mount_at' in init_data:
+        if "mount_at" in init_data:
             try:
-                init_data['mount_at'] = Path(init_data['mount_at'])
+                init_data["mount_at"] = mount_at_prefix / to_relative_path(
+                    init_data["mount_at"]
+                )
             except Exception as err:
                 raise SpekulatioValidationError(
                     f"Invalid 'mount_at' path '{init_data['mount_at']}': {err}"
                 )
 
-        if 'actions' in init_data:
+        if "actions" in init_data:
             actions = []
             try:
-                for action_data in init_data['actions']:
+                for action_data in init_data["actions"]:
                     actions.append(Action.from_dict(action_data))
-                init_data['actions'] = actions
+                init_data["actions"] = actions
             except Exception as err:
                 raise SpekulatioValidationError(f"Invalid action: {err}")
 

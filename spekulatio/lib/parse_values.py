@@ -37,5 +37,5 @@ def parse_values_from_directory(path: Path, name: str = '_values'):
         if values_path.exists():
             load_function = load_functions[filetype]
             text = values_path.read_text(encoding="utf-8")
-            return load_function(text)
+            return load_function(text) or {}
     return {}
