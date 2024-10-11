@@ -16,8 +16,8 @@ from .actions import create_dir_action
 
 @dataclass
 class Layer:
-    path: Path = Path(".")
-    mount_at: Path = Path(".")
+    path: Path
+    mount_at: Path
     actions: list[Action] = field(default_factory=list)
     values: dict[Any, Any] = field(default_factory=dict)
 
@@ -64,6 +64,8 @@ class Layer:
                 raise SpekulatioValidationError(
                     f"Layer path '{init_data['path']}' must be a directory"
                 )
+        else:
+            init_data["path"] = path_prefix / Path(".")
 
         if "mount_at" in init_data:
             try:
@@ -74,6 +76,8 @@ class Layer:
                 raise SpekulatioValidationError(
                     f"Invalid 'mount_at' path '{init_data['mount_at']}': {err}"
                 )
+        else:
+            init_data["mount_at"] = mount_at_prefix / Path(".")
 
         if "actions" in init_data:
             actions = []

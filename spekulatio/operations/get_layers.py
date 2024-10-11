@@ -22,8 +22,6 @@ def get_layers(
     :param spekulatio_file_path: path object to the spekulatio.yaml file.
     :param all_paths: set of paths to detect cyclic references.
     """
-    log.info(f"spk file: {spekulatio_file_path}")
-
     layers: list[Layer] = []
 
     # create a set of normalized paths to detect cyclic references
@@ -81,8 +79,9 @@ def get_layers(
         layers.extend(linked_layers)
 
     # get main layer
-    path_prefix = spekulatio_file_path.parent
-    main_layer = Layer.from_dict(data, path_prefix, mount_at_prefix)
-    layers.append(main_layer)
+    if data:
+        path_prefix = spekulatio_file_path.parent
+        main_layer = Layer.from_dict(data, path_prefix, mount_at_prefix)
+        layers.append(main_layer)
 
     return layers

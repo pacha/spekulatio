@@ -143,8 +143,21 @@ class Node:
             yield child
             yield from child.traverse()
 
+    def prune(self):
+        """Remove branches that don't end in a file."""
+        for child in list(self.children):
+            child.prune()
+            if not child._children and child.is_dir:
+                del self._children[child.name]
+                child.parent = None
+
+    def __repr__(self):
+        return self.name
+
     def __str__(self):
-        text = f"{self.name} [{self.action.name}]"
-        for child in self.children:
-            text += f"\n{child.level * '-'}{child}"
-        return text
+        return self.name
+    # def __str__(self):
+    #     text = f"{self.name} [{self.action.name}]"
+    #     for child in self.children:
+    #         text += f"\n{child.level * '-'}{child}"
+    #     return text

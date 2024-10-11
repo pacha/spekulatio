@@ -13,4 +13,7 @@ def create_tree(layers: list[Layer]) -> Node:
     for layer in layers:
         layer.apply_to(root)
 
+    # don't include empty directories
+    root.prune()
+
     return root
