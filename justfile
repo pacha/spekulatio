@@ -11,7 +11,7 @@ project_dir := justfile_directory()
   pytest tests/
 
 @test *params:
-  pytest -x -o log_cli=true {{ params }}
+  pytest -vv -x -o log_cli=true {{ params }}
 
 @format:
   black {{ project_dir }}

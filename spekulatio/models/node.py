@@ -111,10 +111,6 @@ class Node:
         return self.layer.path / self.path
 
     @cached_property
-    def children(self):
-        return self._children.values()
-
-    @cached_property
     def prev_sibling(self):
         if self.is_root:
             return None
@@ -138,7 +134,7 @@ class Node:
     def next(self):
         self.sort()
         if self.children:
-            return list(self.children)[0]
+            return self.children[0]
         if self.next_sibling:
             return self.next_sibling
         if self.parent:
@@ -152,6 +148,11 @@ class Node:
     @cached_property
     def is_dir(self):
         return isinstance(self.action, CreateDir)
+
+    @property
+    def children(self):
+        self.sort()
+        return list(self._children.values())
 
     def __getitem__(self, name) -> "Node":
         """Get child by name.
