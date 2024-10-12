@@ -2,11 +2,6 @@
 from spekulatio.models import Node
 from spekulatio.models import Layer
 
-def test_create_nodes():
-    # node = Node()
-    # assert node.parent is None
-    assert 1 == 1
-
 def test_prune(fixtures_path):
     layer = Layer.from_dict({
         "path": str(fixtures_path / "prune"),

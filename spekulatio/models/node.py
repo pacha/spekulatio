@@ -60,13 +60,30 @@ class Node:
     @cached_property
     def values(self):
         """Compute the effective values for this node."""
+        # general defaults
+        pre_inherited_defaults = {
+            "_template": "spekulatio/default.html",
+        }
+        # defaults reset at each node
+        post_inherited_defaults = {
+            "_output_name_template": None,
+            "_sort": ["*"],
+        }
+
         effective_values = {}
+        effective_values.update(pre_inherited_defaults)
         effective_values.update(self.inherited_values)
+        effective_values.update(post_inherited_defaults)
 
         # apply patches in order: first layers first
         for layer_raw_values in self.raw_values:
             effective_values = patch_dictionary(effective_values, layer_raw_values)
         return effective_values
+
+    @cached_property
+    def user_values(self):
+        """Return only user values (ie. values without leading underscore)."""
+        return {key: value for key, value in self.values.items() if not key.startswith("_")}
 
     @cached_property
     def path(self):

@@ -4,8 +4,40 @@ from pathlib import Path
 import pytest
 
 from spekulatio.logs import log
+from spekulatio.models import Node
 from spekulatio.models import Layer
 from spekulatio.operations import create_tree
+
+def test_default_values(fixtures_path):
+    layer = Layer.from_dict({
+        "path": str(fixtures_path / "values-default"),
+        "actions": [
+            {
+                "name": "Md2Html",
+            },
+        ],
+    })
+    root = create_tree([layer])
+
+    # dir1 must show the default values
+    assert root["dir1"].values["_template"] == "spekulatio/default.html"
+    assert root["dir1"].values["_sort"] == ["*"]
+
+    # dir2 must show the overriden values
+    assert root["dir1"]["dir2"].values["_template"] == "some-template.html"
+    assert root["dir1"]["dir2"].values["_sort"] == ["foo.md", "*", "bar.md"]
+
+    # dir2/foo.md must show the overriden value only for _template
+    assert root["dir1"]["dir2"]["foo.md"].values["_template"] == "some-template.html"
+    assert root["dir1"]["dir2"]["foo.md"].values["_sort"] == ["*"]
+
+    # dir3 must show the default values
+    assert root["dir1"]["dir3"].values["_template"] == "spekulatio/default.html"
+    assert root["dir1"]["dir3"].values["_sort"] == ["*"]
+
+    # dir3/foo.md must show the default values
+    assert root["dir1"]["dir3"]["foo.md"].values["_template"] == "spekulatio/default.html"
+    assert root["dir1"]["dir3"]["foo.md"].values["_sort"] == ["*"]
 
 def test_values_frontmatter(fixtures_path):
     path = fixtures_path / "values-frontmatter"
@@ -19,7 +51,7 @@ def test_values_frontmatter(fixtures_path):
     })
     root = create_tree([layer])
     node = root["foo.md"]
-    assert node.values == {"foo": 1, "bar": 2}
+    assert node.user_values == {"foo": 1, "bar": 2}
 
 def test_values_directory(fixtures_path):
     path = fixtures_path / "values-directory"
@@ -33,7 +65,7 @@ def test_values_directory(fixtures_path):
     })
     root = create_tree([layer])
     node = root["foo"]
-    assert node.values == {"foo": 1, "bar": 2}
+    assert node.user_values == {"foo": 1, "bar": 2}
 
 def test_values_inheritance(fixtures_path):
     layer1 = Layer.from_dict({

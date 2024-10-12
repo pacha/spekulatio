@@ -1,0 +1,5 @@
+_template: "some-template.html"
+_sort:
+  - "foo.md"
+  - "*"
+  - "bar.md"
