@@ -8,7 +8,6 @@ def test_prune(fixtures_path):
         "actions": [
             {
                 "name": "Md2Html",
-                "patterns": ["*.md", "*.markdown"],
             },
         ],
     })
@@ -41,7 +40,6 @@ def test_prune_all(fixtures_path):
         "actions": [
             {
                 "name": "Md2Html",
-                "patterns": ["*.md", "*.markdown"],
             },
         ],
     })
@@ -61,3 +59,49 @@ def test_prune_all(fixtures_path):
 
     # after pruning the empty dictionaries are gone
     assert len(root.children) == 0
+
+def test_sorting(fixtures_path):
+    layer = Layer.from_dict({
+        "path": str(fixtures_path / "sorting"),
+        "actions": [
+            {
+                "name": "Md2Html",
+            },
+        ],
+    })
+    root = Node(name=".")
+    layer.apply_to(root)
+
+    # prev sibling
+    assert root["dir1"]["a.md"].prev_sibling is None
+    assert root["dir1"]["b.md"].prev_sibling == root["dir1"]["a.md"]
+    assert root["dir1"]["c.md"].prev_sibling == root["dir1"]["b.md"]
+    assert root["dir1"]["d.md"].prev_sibling == root["dir1"]["c.md"]
+    assert root["dir1"]["e.md"].prev_sibling == root["dir1"]["d.md"]
+
+    # next sibling
+    assert root["dir1"]["a.md"].next_sibling == root["dir1"]["b.md"]
+    assert root["dir1"]["b.md"].next_sibling == root["dir1"]["c.md"]
+    assert root["dir1"]["c.md"].next_sibling == root["dir1"]["d.md"]
+    assert root["dir1"]["d.md"].next_sibling == root["dir1"]["e.md"]
+    assert root["dir1"]["e.md"].next_sibling is None
+
+    # prev node
+    assert root["dir1"]["a.md"].prev is root["dir1"]
+    assert root["dir1"]["b.md"].prev == root["dir1"]["a.md"]
+    assert root["dir1"]["c.md"].prev == root["dir1"]["b.md"]
+    assert root["dir1"]["d.md"].prev == root["dir1"]["c.md"]
+    assert root["dir1"]["e.md"].prev == root["dir1"]["d.md"]
+
+    # next next
+    assert root["dir1"]["a.md"].next == root["dir1"]["b.md"]
+    assert root["dir1"]["b.md"].next == root["dir1"]["c.md"]
+    assert root["dir1"]["c.md"].next == root["dir1"]["d.md"]
+    assert root["dir1"]["d.md"].next == root["dir1"]["e.md"]
+    assert root["dir1"]["e.md"].next is root["f.md"]
+
+    # root
+    assert root.prev is None
+    assert root.prev_sibling is None
+    assert root.next_sibling is None
+    assert root.next is root["dir1"]

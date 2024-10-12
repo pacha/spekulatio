@@ -8,8 +8,8 @@ from functools import cached_property
 
 from cels import patch_dictionary
 
-
 from spekulatio.logs import log
+from spekulatio.exceptions import SpekulatioValidationError
 from .action import Action
 from .actions import CreateDir
 
@@ -25,10 +25,9 @@ class Node:
 
     # links
     parent: Optional["Node"] = None
-    prev: Optional["Node"] = None
-    next: Optional["Node"] = None
-    prev_sibling: Optional["Node"] = None
-    next_sibling: Optional["Node"] = None
+    _prev_sibling: Optional["Node"] = None
+    _next_sibling: Optional["Node"] = None
+    _sorted: bool = False
 
     @cached_property
     def raw_values(self) -> list[dict[Any, Any]]:
@@ -116,6 +115,37 @@ class Node:
         return self._children.values()
 
     @cached_property
+    def prev_sibling(self):
+        if self.is_root:
+            return None
+        self.parent.sort()
+        return self._prev_sibling
+
+    @cached_property
+    def next_sibling(self):
+        if self.is_root:
+            return None
+        self.parent.sort()
+        return self._next_sibling
+
+    @cached_property
+    def prev(self):
+        if self.is_root:
+            return None
+        return self.prev_sibling if self.prev_sibling else self.parent
+
+    @cached_property
+    def next(self):
+        self.sort()
+        if self.children:
+            return list(self.children)[0]
+        if self.next_sibling:
+            return self.next_sibling
+        if self.parent:
+            return self.parent.next_sibling
+        return None
+
+    @cached_property
     def is_root(self):
         return self.parent is None
 
@@ -167,6 +197,84 @@ class Node:
             if not child._children and child.is_dir:
                 del self._children[child.name]
                 child.parent = None
+
+    def sort(self):
+        """Sort children.
+
+        * The children are sorted as described in the _sort variable.
+        * The _sort variable is a list of the child names.
+        * All children not listed in _sort are placed alphabetically sorted
+          where the special value "*" (the sink) is located in the list.
+        * If the sink is not explicitly specified, it is implicitly considered
+          to be at the end of the list.
+        * If there are names in _sort that are not actual children of the node
+          an error is raised.
+        """
+        # check if already sorted
+        if self._sorted:
+            return
+
+        # get sorting list
+        try:
+            sorted_names = self.values["_sort"]
+        except KeyError:
+            raise SpekulatioValidationError(
+                f"{self.input_path}: value '_sort' should be defined in node "
+                "to be able to do traverse operations."
+            )
+
+        # validate
+        all_names = set(self._children.keys())
+        named_names = set(sorted_names)
+        extra_names = named_names - all_names
+
+        # duplicate entries
+        if len(sorted_names) > len(named_names):
+            raise SpekulatioValidationError(
+                f"{self.input_path}: there are duplicated entries in the _sort list."
+            )
+
+        # wrong types
+        for name in named_names:
+            if not isinstance(name, str) or not name:
+                raise SpekulatioValidationError(
+                    f"{self.input_path}: wrong entry in _sort ('{name}'). "
+                    "All values must be non-empty strings."
+                )
+
+        # non-existing entries
+        if extra_names not in [set(), set("*")]:
+            raise SpekulatioValidationError(
+                f"{self.input_path}: names '{extra_names}' listed in _sort are not ."
+                "children of the node."
+            )
+
+        # get sink position
+        try:
+            sink_position = sorted_names.index("*")
+        except ValueError:
+            sink_position = len(sorted_names)
+
+        # sort all names
+        top_names = sorted_names[:sink_position]
+        bottom_names = sorted_names[(sink_position + 1):]
+        missing_names = all_names - named_names
+        all_sorted_names = top_names + sorted(missing_names) + bottom_names
+
+        # sort children
+        sorted_children = {}
+        prev_child = None
+        for name in all_sorted_names:
+            child = self._children[name]
+            child._prev_sibling = prev_child
+            sorted_children[name] = child
+            if prev_child:
+                prev_child._next_sibling = child
+            prev_child = child
+        self._children = sorted_children
+
+        # mark as sorted
+        self._sorted = True
 
     def __repr__(self):
         return self.name
