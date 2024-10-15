@@ -8,9 +8,8 @@ from spekulatio.models import Layer
 from spekulatio.operations import create_tree
 
 def test_create_tree(fixtures_path):
-    path = fixtures_path / "simple"
     layer = Layer.from_dict({
-        "path": str(path),
+        "path": str(fixtures_path / "simple"),
         "mount_at": "this/that",
         "actions": [
             {

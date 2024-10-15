@@ -7,7 +7,6 @@ Example displaying all fields:
 
     layers:
       - path: /path/to/some/other/spekulatio.yaml
-        mount_at: some/folder
     path: .
     actions:
       - name: Md2Html
@@ -15,7 +14,7 @@ Example displaying all fields:
         patterns:
         - "*.md"
         - "*.markdown"
-        output_name: "{{ _input_path.with_suffix('.html').name }}"
+        output_name: "{{ _input_name.with_suffix('.html') }}"
         parameters:
           extensions:
             - toc
@@ -39,9 +38,6 @@ list of child Spekulatio files to process. It is not mandatory to have a
 For each layer:
 
 * `path` (String | Required): location of the child `spekulatio.yaml` file.
-* `mount_at` (String | Optional | Default: `/`): where inside the output
-  directory should this layer be generated. By default all layers are generated at
-  the root of the output directory (`/`), however a subdirectory can be specified.
 * `values` (Dictionary | Optional | Default: {}): dictionary of values to pass
   to the first node of the layer (see [LINK:working-with-values]). If the
   `spekulatio.yaml` file pointed by `path` defines `default_values`, the values in

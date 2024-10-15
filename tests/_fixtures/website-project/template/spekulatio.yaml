@@ -1,0 +1,8 @@
+
+path: .
+actions:
+  - name: Copy
+    patterns:
+      - "*.css"
+      - "*.js"
+      - "*.png"

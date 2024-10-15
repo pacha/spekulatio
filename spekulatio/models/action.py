@@ -19,7 +19,7 @@ from spekulatio.lib.parse_values import parse_values_from_frontmatter
 @dataclass
 class Action:
     patterns: tuple[str] = field(default_factory=tuple)
-    output_name_template: str = "{{ _this.input_path.name }}"
+    output_name: str = "{{ _input_name }}"
     parameters: dict[str, Any] = field(default_factory=dict)
     frontmatter: bool = False
     parser: Parser = field(init=False)
@@ -41,7 +41,7 @@ class Action:
                     "name": And(str, error="'name' should be a string."),
                     Optional("package", default="spekulatio"): And(str, error="'package' should be a string."),
                     Optional("patterns"): And([str], error="'patterns' should be a list of strings."),
-                    Optional("output_name_template"): And(str, error="'output_name_template' should be a string."),
+                    Optional("output_name"): And(str, error="'output_name' should be a string."),
                     Optional("frontmatter"): And(bool, error="'frontmatter' should be true or false."),
                     Optional("parameters"): And(
                         {str: object},
@@ -71,28 +71,37 @@ class Action:
         """Return if the provided path matches the patterns of the action."""
         return self.parser.match(path)
 
-    def get_output_name(self, values: dict[Any, Any]) -> str:
-        """Return the output filename of the action."""
-        output_name_template = values.get("_output_name_template", self.output_name_template)
-        template = Template(output_name_template)
-        output_name = template.render(values)
-        return output_name
-
     def get_values(self, input_path: Path) -> dict[Any, Any]:
         """Get values from frontmatter and yaml files."""
         if not self.frontmatter:
             return {}
         return parse_values_from_frontmatter(input_path)
 
-    def get_action_values(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> dict[Any, Any]:
-        """Get addtional values provided by the action itself."""
-        return {}
+    def get_output_name(self, values: dict[Any, Any]) -> str:
+        """Return the output filename of the action."""
+
+        # get output name template
+        output_name = values.get("_output_name")
+        if not output_name:
+            output_name = self.output_name
+
+        # render template
+        template = Template(output_name)
+        name = template.render(values)
+        if not name:
+            raise SpekulatioValidationError(
+                "Wrong output name for node. The output name for a node can't be an empty string. "
+                f"(output name template: {output_name})."
+            )
+        return name
 
     def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
         """Execute the action.
 
         To be overloaded by the specific Action sub-classes.
         """
+        log.info(f"{self.name}: {output_path}")
+        return
         raise NotImplementedError(
             f"Malformed action '{self.__class__.__name__}': no 'execute' method defined"
         )

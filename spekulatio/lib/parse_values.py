@@ -16,7 +16,7 @@ def parse_values_from_frontmatter(path: Path):
 
 def parse_values_from_directory(path: Path, name: str = '_values'):
     """Extract values from a values file."""
-    if not path.is_dir():
+    if path.exists() and not path.is_dir():
         raise SpekulatioValidationError(f"{path} is not a directory.")
 
     variants = [

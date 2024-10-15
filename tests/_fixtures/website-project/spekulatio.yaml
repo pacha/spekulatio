@@ -1,0 +1,7 @@
+
+layers:
+  - path: template/spekulatio.yaml
+  - path: content/spekulatio.yaml
+
+values:
+  project: "my-project"

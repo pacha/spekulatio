@@ -1,0 +1,7 @@
+
+path: .
+actions:
+  - name: Md2Html
+  - name: Copy
+    patterns:
+      - "*.json"

@@ -16,7 +16,7 @@ def test_action_create():
         }
     })
     assert action.patterns == ["*.jpeg", "*.jpg"]
-    assert action.output_name_template == "{{ _this.input_path.name }}"
+    assert action.output_name == "{{ _input_name }}"
     assert action.parameters == {"foo": 1, "bar": 2}
 
 def test_action_create_fail():
@@ -42,9 +42,9 @@ def test_action_output_name():
     action = Action.from_dict({
         "name": "Md2Html",
         "patterns": ["*.md"],
-        "output_name_template": "{{ path.with_suffix('.html').name }}",
+        "output_name": "{{ _input_name.with_suffix('.html') }}",
     })
     values = {
-        "path": Path("foo/baz/bar.md"),
+        "_input_name": Path("bar.md"),
     }
     assert action.get_output_name(values) == "bar.html"

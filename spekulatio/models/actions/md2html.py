@@ -14,7 +14,7 @@ from ..action import Action
 @dataclass
 class Md2Html(Action):
     patterns: tuple[str] = ("*.md", "*.mkd", "*.mkdn", "*.mdwn", "*.mdwon", "*.markdown")
-    output_name_template: str = "{{ _this.input_path.with_suffix('.html').name }}"
+    output_name: str = "{{ _input_name.with_suffix('.html') }}"
     frontmatter: bool = True
 
     # def validate_parameters(self):

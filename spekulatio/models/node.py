@@ -39,7 +39,7 @@ class Node:
             return self._values
 
         for layer, action in zip(self._layers, self._actions):
-            values = action.get_values(layer.path / self.path)
+            values = action.get_values(layer.path / self.input_path)
             self._values.append(values)
         return self._values
 
@@ -65,7 +65,7 @@ class Node:
         }
         # defaults reset at each node
         post_inherited_defaults = {
-            "_output_name_template": None,
+            "_output_name": None,
             "_sort": ["*"],
         }
 
@@ -77,6 +77,11 @@ class Node:
         # apply patches in order: first layers first
         for layer_raw_values in self.raw_values:
             effective_values = patch_dictionary(effective_values, layer_raw_values)
+
+        # add output special values
+        effective_values["_this"] = self
+        effective_values["_input_name"] = Path(self.name)
+
         return effective_values
 
     @cached_property
@@ -85,13 +90,28 @@ class Node:
         return {key: value for key, value in self.values.items() if not key.startswith("_")}
 
     @cached_property
-    def path(self):
+    def input_path(self):
+        """Return the relative path of the input file."""
         if self.is_root:
             return Path(".")
-        return self.parent.path / self.name
+        return self.parent.input_path / self.name
+
+    @cached_property
+    def output_path(self):
+        """Return the relative path of the output file."""
+        if self.is_root:
+            return Path(".")
+        try:
+            output_name = self.action.get_output_name(self.values)
+        except SpekulatioValidationError as err:
+            raise SpekulatioValidationError(
+                f"{self.absolute_input_path}: {err}"
+            )
+        return self.parent.output_path / output_name
 
     @cached_property
     def level(self):
+        """Return the number of nodes between this node and the root."""
         if self.is_root:
             return 0
         return self.parent.level + 1
@@ -103,12 +123,6 @@ class Node:
     @cached_property
     def layer(self):
         return self._layers[-1]
-
-    @cached_property
-    def input_path(self):
-        if self.is_root:
-            return Path(".")
-        return self.layer.path / self.path
 
     @cached_property
     def prev_sibling(self):
@@ -153,6 +167,15 @@ class Node:
     def children(self):
         self.sort()
         return list(self._children.values())
+
+    @cached_property
+    def absolute_input_path(self):
+        """Return the absolute path of the input file."""
+        return (self.layer.path / self.input_path).absolute()
+
+    def get_absolute_output_path(self, base_path: Path):
+        """Return the absolute path of the output file."""
+        return (base_path / self.output_path).absolute()
 
     def __getitem__(self, name) -> "Node":
         """Get child by name.
@@ -220,7 +243,7 @@ class Node:
             sorted_names = self.values["_sort"]
         except KeyError:
             raise SpekulatioValidationError(
-                f"{self.input_path}: value '_sort' should be defined in node "
+                f"{self.absolute_input_path}: value '_sort' should be defined in node "
                 "to be able to do traverse operations."
             )
 
@@ -232,21 +255,21 @@ class Node:
         # duplicate entries
         if len(sorted_names) > len(named_names):
             raise SpekulatioValidationError(
-                f"{self.input_path}: there are duplicated entries in the _sort list."
+                f"{self.absolute_input_path}: there are duplicated entries in the _sort list."
             )
 
         # wrong types
         for name in named_names:
             if not isinstance(name, str) or not name:
                 raise SpekulatioValidationError(
-                    f"{self.input_path}: wrong entry in _sort ('{name}'). "
+                    f"{self.absolute_input_path}: wrong entry in _sort ('{name}'). "
                     "All values must be non-empty strings."
                 )
 
         # non-existing entries
         if extra_names not in [set(), set("*")]:
             raise SpekulatioValidationError(
-                f"{self.input_path}: names '{extra_names}' listed in _sort are not ."
+                f"{self.absolute_input_path}: names '{extra_names}' listed in _sort are not ."
                 "children of the node."
             )
 
@@ -276,6 +299,14 @@ class Node:
 
         # mark as sorted
         self._sorted = True
+
+    def write(self, base_path: Path) -> None:
+        """Write node to disk."""
+        self.action.execute(
+            input_path=self.absolute_input_path,
+            output_path=self.get_absolute_output_path(base_path),
+            values=self.values
+        )
 
     def __repr__(self):
         return self.name
