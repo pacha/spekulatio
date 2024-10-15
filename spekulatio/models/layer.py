@@ -11,13 +11,13 @@ from spekulatio.lib.paths import to_relative_path
 from spekulatio.exceptions import SpekulatioValidationError
 from .node import Node
 from .action import Action
+from .actions import noop_action
 from .actions import create_dir_action
 
 
 @dataclass
 class Layer:
     path: Path
-    mount_at: Path
     actions: list[Action] = field(default_factory=list)
     values: dict[Any, Any] = field(default_factory=dict)
 
@@ -26,7 +26,6 @@ class Layer:
         cls,
         data: dict,
         path_prefix: Path = Path("."),
-        mount_at_prefix: Path = Path("."),
     ):
         """Create an instance object from a data dictionary."""
         try:
@@ -34,9 +33,6 @@ class Layer:
                 {
                     Optional("path"): And(
                         str, len, error="'path' should be a non-empty string."
-                    ),
-                    Optional("mount_at"): And(
-                        str, len, error="'mount_at' should be a non-empty string."
                     ),
                     Optional("actions"): And(list, error="'actions' should be a list."),
                     Optional("values"): And(
@@ -67,18 +63,6 @@ class Layer:
         else:
             init_data["path"] = path_prefix / Path(".")
 
-        if "mount_at" in init_data:
-            try:
-                init_data["mount_at"] = mount_at_prefix / to_relative_path(
-                    init_data["mount_at"]
-                )
-            except Exception as err:
-                raise SpekulatioValidationError(
-                    f"Invalid 'mount_at' path '{init_data['mount_at']}': {err}"
-                )
-        else:
-            init_data["mount_at"] = mount_at_prefix / Path(".")
-
         if "actions" in init_data:
             actions = []
             try:
@@ -106,13 +90,8 @@ class Layer:
         root._layers.append(self)
         root._actions.append(create_dir_action)
 
-        # insert or update directories of the mount_at path
-        node = root
-        for name in self.mount_at.parts:
-            node = node.upsert_child(name=name, action=create_dir_action, layer=self)
-
         # insert or update files and directories from layer
-        self.apply_to_rec(node=node, path=self.path)
+        self.apply_to_rec(node=root, path=self.path)
 
     def apply_to_rec(self, node: Node, path: Path):
         """Apply layer per directory, recursively."""

@@ -23,6 +23,4 @@ def show_layers(config_location):
     layers = get_layers(spekulatio_file_path)
 
     for index, layer in enumerate(layers):
-        print(f"Layer {index}:")
-        print(f"  path: {layer.path}")
-        print(f"  mount at: {layer.mount_at}")
+        print(f"Layer {index}: {layer.path}")

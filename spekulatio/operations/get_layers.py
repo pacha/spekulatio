@@ -14,7 +14,6 @@ from spekulatio.exceptions import SpekulatioValidationError
 
 def get_layers(
     spekulatio_file_path: Path,
-    mount_at_prefix: Path = Path("."),
     all_paths: typing.Optional[set[Layer]] = None,
 ) -> list[Layer]:
     """Get list of layers defined in a Spekulatio configuration file.
@@ -51,18 +50,14 @@ def get_layers(
             "path": And(
                 str, len, error="'path' in 'layers' should be a non-empty string."
             ),
-            Optional("mount_at", default="."): And(
-                str, len, error="'mount_at' in 'layers' should be a non-empty string."
-            ),
         }
     )
     for layer_definition in layer_definitions:
 
-        # get path and mount_at values
+        # get path
         try:
             validated_data = schema.validate(layer_definition)
             path = spekulatio_file_path.parent / Path(validated_data["path"])
-            mount_at = mount_at_prefix / to_relative_path(validated_data["mount_at"])
         except Exception as err:
             raise SpekulatioValidationError(f"File {spekulatio_file_path}: {err}")
 
@@ -75,13 +70,13 @@ def get_layers(
             )
 
         # get all layers from this spekulatio file
-        linked_layers = get_layers(path, mount_at, all_paths)
+        linked_layers = get_layers(path, all_paths)
         layers.extend(linked_layers)
 
     # get main layer
     if data:
         path_prefix = spekulatio_file_path.parent
-        main_layer = Layer.from_dict(data, path_prefix, mount_at_prefix)
+        main_layer = Layer.from_dict(data, path_prefix)
         layers.append(main_layer)
 
     return layers
