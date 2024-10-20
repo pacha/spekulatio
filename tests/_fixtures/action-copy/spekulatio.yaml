@@ -1,0 +1,6 @@
+
+actions:
+  - name: Copy
+    patterns:
+      - "*.text"
+    output_name: "{{ _input_name.with_suffix('.txt') | upper }}"

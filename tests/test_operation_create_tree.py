@@ -1,34 +1,18 @@
 
-from pathlib import Path
-
-import pytest
-
-from spekulatio.logs import log
-from spekulatio.models import Layer
+from spekulatio.operations import get_layers
 from spekulatio.operations import create_tree
 
 def test_create_tree(fixtures_path):
-    layer = Layer.from_dict({
-        "path": str(fixtures_path / "simple"),
-        "actions": [
-            {
-                "name": "Md2Html",
-            },
-            {
-                "name": "Render",
-                "patterns": ["*.txt"],
-            },
-        ],
-    })
-    root = create_tree([layer])
+    layers = get_layers(fixtures_path / "simple")
+    root = create_tree(layers)
 
     # check node types
-    assert root["dir1"].is_dir
-    assert not root["foo.md"].is_dir
-    assert not root["dir1"]["baz.txt"].is_dir
+    assert root.get("dir1").is_dir
+    assert not root.get("foo.md").is_dir
+    assert not root.get("dir1/baz.txt").is_dir
 
     # check number of nodes
     assert len(root.children) == 2
-    assert len(root["dir1"].children) == 1
-    assert len(root["dir1"]["baz.txt"].children) == 0
-    assert len(root["foo.md"].children) == 0
+    assert len(root.get("dir1").children) == 1
+    assert len(root.get("dir1/baz.txt").children) == 0
+    assert len(root.get("foo.md").children) == 0

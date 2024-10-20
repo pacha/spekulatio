@@ -17,13 +17,16 @@ from .actions import create_dir_action
 
 @dataclass
 class Layer:
+    spekulatio_file_path: Path
     path: Path
+    values_file: str = "_values.yaml"
     actions: list[Action] = field(default_factory=list)
     values: dict[Any, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(
         cls,
+        spekulatio_file_path: Path,
         data: dict,
         path_prefix: Path = Path("."),
     ):
@@ -33,6 +36,9 @@ class Layer:
                 {
                     Optional("path"): And(
                         str, len, error="'path' should be a non-empty string."
+                    ),
+                    Optional("values_file"): And(
+                        str, len, error="'values_file' should be a non-empty string."
                     ),
                     Optional("actions"): And(list, error="'actions' should be a list."),
                     Optional("values"): And(
@@ -72,14 +78,18 @@ class Layer:
             except Exception as err:
                 raise SpekulatioValidationError(f"Invalid action: {err}")
 
-        return cls(**init_data)
+        return cls(spekulatio_file_path=spekulatio_file_path, **init_data)
 
     def get_action(self, path: Path) -> Action:
         """Return action for a given path or None if none matches."""
         if path.is_dir():
             return create_dir_action
+        elif path.name == self.values_file:
+            return None
+        elif path.resolve() == self.spekulatio_file_path:
+            return None
         for action in self.actions:
-            if action.match(path):
+            if action.match(path.relative_to(self.path)):
                 return action
         return None
 

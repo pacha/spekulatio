@@ -1,0 +1,5 @@
+actions:
+  - name: Md2Html
+  - name: Render
+    patterns:
+      - "*.txt"

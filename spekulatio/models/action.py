@@ -69,21 +69,14 @@ class Action:
 
     def match(self, path: Path) -> bool:
         """Return if the provided path matches the patterns of the action."""
-        return self.parser.match(path)
-
-    def get_values(self, input_path: Path) -> dict[Any, Any]:
-        """Get values from frontmatter and yaml files."""
-        if not self.frontmatter:
-            return {}
-        return parse_values_from_frontmatter(input_path)
+        is_a_match = self.parser.match(path)
+        return is_a_match
 
     def get_output_name(self, values: dict[Any, Any]) -> str:
         """Return the output filename of the action."""
 
         # get output name template
-        output_name = values.get("_output_name")
-        if not output_name:
-            output_name = self.output_name
+        output_name = values.get("_output_name", self.output_name)
 
         # render template
         template = Template(output_name)
@@ -95,13 +88,22 @@ class Action:
             )
         return name
 
+    def get_values(self, input_path: Path) -> dict[Any, Any]:
+        """Get values from frontmatter and yaml files."""
+        if not self.frontmatter:
+            return {}
+        src, frontmatter_values = parse_values_from_frontmatter(input_path)
+
+        values = {}
+        values["_src"] = src
+        values.update(frontmatter_values)
+        return values
+
     def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
         """Execute the action.
 
         To be overloaded by the specific Action sub-classes.
         """
-        log.info(f"{self.name}: {output_path}")
-        return
         raise NotImplementedError(
             f"Malformed action '{self.__class__.__name__}': no 'execute' method defined"
         )

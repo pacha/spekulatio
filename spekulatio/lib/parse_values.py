@@ -11,8 +11,8 @@ from .parse_frontmatter import parse_frontmatter
 def parse_values_from_frontmatter(path: Path):
     """Extract frontmatter values from the given path."""
     text = path.read_text(encoding="utf-8")
-    _, values = parse_frontmatter(text)
-    return values
+    src, values = parse_frontmatter(text)
+    return src, values
 
 def parse_values_from_directory(path: Path, name: str = '_values'):
     """Extract values from a values file."""

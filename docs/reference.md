@@ -8,6 +8,7 @@ Example displaying all fields:
     layers:
       - path: /path/to/some/other/spekulatio.yaml
     path: .
+    values_file: "_values.yaml"
     actions:
       - name: Md2Html
         package: spekulatio

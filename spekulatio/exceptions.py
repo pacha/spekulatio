@@ -5,5 +5,8 @@ class SpekulatioError(Exception):
 class SpekulatioInternalError(SpekulatioError):
     """Unexpected Spekulatio error."""
 
-class SpekulatioValidationError(SpekulatioError):
+class SpekulatioInputError(SpekulatioError):
+    """User input error."""
+
+class SpekulatioValidationError(SpekulatioInputError):
     """User configuration error."""

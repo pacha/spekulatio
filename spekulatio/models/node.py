@@ -9,6 +9,7 @@ from functools import cached_property
 from cels import patch_dictionary
 
 from spekulatio.logs import log
+from spekulatio.exceptions import SpekulatioInputError
 from spekulatio.exceptions import SpekulatioValidationError
 from .action import Action
 from .actions import CreateDir
@@ -65,7 +66,7 @@ class Node:
         }
         # defaults reset at each node
         post_inherited_defaults = {
-            "_output_name": None,
+            # "_output_name": "{{ _input_name }}",
             "_sort": ["*"],
         }
 
@@ -79,6 +80,7 @@ class Node:
             effective_values = patch_dictionary(effective_values, layer_raw_values)
 
         # add output special values
+        effective_values["_root"] = self.root
         effective_values["_this"] = self
         effective_values["_input_name"] = Path(self.name)
 
@@ -88,6 +90,11 @@ class Node:
     def user_values(self):
         """Return only user values (ie. values without leading underscore)."""
         return {key: value for key, value in self.values.items() if not key.startswith("_")}
+
+    @cached_property
+    def path(self):
+        """Return the relative path of the node with a leading slash."""
+        return f"/{self.input_path}"
 
     @cached_property
     def input_path(self):
@@ -108,6 +115,15 @@ class Node:
                 f"{self.absolute_input_path}: {err}"
             )
         return self.parent.output_path / output_name
+
+    @cached_property
+    def absolute_input_path(self):
+        """Return the absolute path of the input file."""
+        return (self.layer.path / self.input_path).absolute()
+
+    def get_absolute_output_path(self, base_path: Path):
+        """Return the absolute path of the output file."""
+        return (base_path / self.output_path).absolute()
 
     @cached_property
     def level(self):
@@ -160,6 +176,12 @@ class Node:
         return self.parent is None
 
     @cached_property
+    def root(self):
+        if self.is_root:
+            return self
+        return self.parent.root
+
+    @cached_property
     def is_dir(self):
         return isinstance(self.action, CreateDir)
 
@@ -168,25 +190,39 @@ class Node:
         self.sort()
         return list(self._children.values())
 
-    @cached_property
-    def absolute_input_path(self):
-        """Return the absolute path of the input file."""
-        return (self.layer.path / self.input_path).absolute()
+    def __truediv__(self, other) -> "Node":
+        if isinstance(other, str):
+            return self.get(other)
+        elif isinstance(other, self.__class__):
+            return self.get(other.name)
+        else:
+            raise TypeError(f"Node {self.input_path} doesn't have a child {other}")
 
-    def get_absolute_output_path(self, base_path: Path):
-        """Return the absolute path of the output file."""
-        return (base_path / self.output_path).absolute()
+    def get(self, *path_segments: list[str]) -> "Node":
+        """Return the node associated to the provided path.
 
-    def __getitem__(self, name) -> "Node":
-        """Get child by name.
+        If the path is relative (eg. foo/bar.md), the node is searched from
+        the current one.
 
-        Eg. node['path']['to']['other']['node']
+        If the path is absolute (eg. /foo/bar.md), the node is searched from
+        the root.
         """
-        return self._children[name]
+        if not path_segments or path_segments == ('',):
+            return self
 
-    def get_child(self, name: str) -> "Node":
-        """Get child by name."""
-        return self[name]
+        first_segment, tail_segments = path_segments[0], path_segments[1:]
+        is_absolute_path = first_segment.startswith('/')
+        if is_absolute_path:
+            return self.root.get(first_segment[1:], *tail_segments)
+
+        parts = first_segment.split('/')
+        first_part, tail_parts = parts[0], parts[1:]
+        try:
+            child = self._children[first_part]
+        except KeyError:
+            raise SpekulatioInputError(f"Can't find child '{first_part}' in '{self}'.")
+
+        return child.get(*tail_parts, *tail_segments)
 
     def _insert_child(self, name: str) -> "Node":
         """Add new child to node."""
@@ -199,7 +235,7 @@ class Node:
         """Insert or update child."""
         try:
             # child exists
-            child = self.get_child(name)
+            child = self._children[name]
         except KeyError:
             # child doesn't exist yet
             child = self._insert_child(name=name)
@@ -309,12 +345,7 @@ class Node:
         )
 
     def __repr__(self):
-        return self.name
+        return self.path
 
     def __str__(self):
-        return self.name
-    # def __str__(self):
-    #     text = f"{self.name} [{self.action.name}]"
-    #     for child in self.children:
-    #         text += f"\n{child.level * '-'}{child}"
-    #     return text
+        return self.path

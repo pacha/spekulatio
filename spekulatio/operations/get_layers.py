@@ -11,6 +11,7 @@ from spekulatio.models import Layer
 from spekulatio.lib.paths import to_relative_path
 from spekulatio.exceptions import SpekulatioValidationError
 
+SPEKULATIO_FILE = "spekulatio.yaml"
 
 def get_layers(
     spekulatio_file_path: Path,
@@ -23,10 +24,17 @@ def get_layers(
     """
     layers: list[Layer] = []
 
-    # create a set of normalized paths to detect cyclic references
+    # always normalize the spekulatio file path
+    spekulatio_file_path = spekulatio_file_path.resolve()
+
+    # allow passing only the parent directory instead of the path to the spekulatio file
+    if spekulatio_file_path.is_dir():
+        spekulatio_file_path = spekulatio_file_path / SPEKULATIO_FILE
+
+    # create a set of spekulatio file paths to detect cyclic references
     if not all_paths:
         all_paths = set()
-    all_paths.add(spekulatio_file_path.resolve())
+    all_paths.add(spekulatio_file_path)
 
     # read file
     try:
@@ -76,7 +84,7 @@ def get_layers(
     # get main layer
     if data:
         path_prefix = spekulatio_file_path.parent
-        main_layer = Layer.from_dict(data, path_prefix)
+        main_layer = Layer.from_dict(spekulatio_file_path, data, path_prefix)
         layers.append(main_layer)
 
     return layers

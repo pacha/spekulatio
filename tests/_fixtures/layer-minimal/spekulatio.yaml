@@ -1,0 +1,9 @@
+path: .
+actions:
+  - name: Md2Html
+    patterns:
+      - "*.md"
+      - "*.markdown"
+values:
+  foo: 1
+  bar: 2

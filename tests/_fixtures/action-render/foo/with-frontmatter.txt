@@ -1,0 +1,6 @@
+---
+
+number: 300
+
+---
+{{ color }} | {{ number }}

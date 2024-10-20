@@ -14,9 +14,9 @@ class CreateDir(Action):
         """Get values from _values.yaml file."""
         return parse_values_from_directory(input_path)
 
-    # def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
-        # """Create directory."""
-        # output_path.mkdir(parents=False, exist_ok=True)
+    def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
+        """Create directory."""
+        output_path.mkdir(parents=False, exist_ok=True)
 
 
 create_dir_action = CreateDir()
