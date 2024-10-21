@@ -73,7 +73,8 @@ class Layer:
             actions = []
             try:
                 for action_data in init_data["actions"]:
-                    actions.append(Action.from_dict(action_data))
+                    action = Action.from_dict(action_data)
+                    actions.append(action)
                 init_data["actions"] = actions
             except Exception as err:
                 raise SpekulatioValidationError(f"Invalid action: {err}")

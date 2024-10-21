@@ -10,21 +10,27 @@ def test_action_create():
     action = Action.from_dict({
         "name": "Copy",
         "patterns": ["*.jpeg", "*.jpg"],
-        "parameters": {
-            "foo": 1,
-            "bar": 2,
-        }
     })
     assert action.patterns == ["*.jpeg", "*.jpg"]
     assert action.output_name == "{{ _input_name }}"
-    assert action.parameters == {"foo": 1, "bar": 2}
 
-def test_action_create_fail():
+def test_action_fail_extra_fields():
     with pytest.raises(SpekulatioValidationError):
         _ = Action.from_dict({
             "name": "Copy",
             "patterns": ["*.txt"],
             "foo": "bar",
+        })
+
+def test_action_fail_wrong_parameters():
+    with pytest.raises(SpekulatioValidationError):
+        _ = Action.from_dict({
+            "name": "Copy",
+            "patterns": ["*.jpeg", "*.jpg"],
+            "parameters": {
+                "foo": 1,
+                "bar": 2,
+            }
         })
 
 def test_action_match():

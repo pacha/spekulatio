@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from functools import cached_property
 
 from cels import patch_dictionary
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
 
 from spekulatio.logs import log
 from spekulatio.exceptions import SpekulatioInputError
@@ -40,7 +42,7 @@ class Node:
             return self._values
 
         for layer, action in zip(self._layers, self._actions):
-            values = action.get_values(layer.path / self.input_path)
+            values = action.get_values(layer.path / self.input_file_path)
             self._values.append(values)
         return self._values
 
@@ -63,6 +65,7 @@ class Node:
         # general defaults
         pre_inherited_defaults = {
             "_template": "spekulatio/default.html",
+            "_url_prefix": "",
         }
         # defaults reset at each node
         post_inherited_defaults = {
@@ -83,6 +86,11 @@ class Node:
         effective_values["_root"] = self.root
         effective_values["_this"] = self
         effective_values["_input_name"] = Path(self.name)
+        effective_values["_i"] = effective_values["_input_name"]
+        effective_values["_env"] = self.root.env
+
+        # add action values
+        effective_values = self.action.process_values(effective_values)
 
         return effective_values
 
@@ -92,38 +100,71 @@ class Node:
         return {key: value for key, value in self.values.items() if not key.startswith("_")}
 
     @cached_property
-    def path(self):
-        """Return the relative path of the node with a leading slash."""
-        return f"/{self.input_path}"
+    def input_name(self):
+        return self.name
+
+    @cached_property
+    def output_name(self):
+        return self.action.get_output_name(self.values)
+
+    @cached_property
+    def env(self):
+        template_dirs = [str(layer.path) for layer in self._layers]
+        env = Environment(loader=FileSystemLoader(template_dirs))
+        return env
 
     @cached_property
     def input_path(self):
-        """Return the relative path of the input file."""
+        """Return tree path of the node (using the input names).
+
+        Eg. /foo/bar.md
+        """
         if self.is_root:
-            return Path(".")
-        return self.parent.input_path / self.name
+            return ""
+        return f"{self.parent.input_path}/{self.input_name}"
 
     @cached_property
     def output_path(self):
-        """Return the relative path of the output file."""
+        """Return tree path of the node (using the output names).
+
+        Eg. /foo/bar.html
+        """
         if self.is_root:
-            return Path(".")
-        try:
-            output_name = self.action.get_output_name(self.values)
-        except SpekulatioValidationError as err:
-            raise SpekulatioValidationError(
-                f"{self.absolute_input_path}: {err}"
-            )
-        return self.parent.output_path / output_name
+            return ""
+        return f"{self.parent.output_path}/{self.output_name}"
 
     @cached_property
-    def absolute_input_path(self):
+    def path(self):
+        return self.input_path
+
+    @cached_property
+    def url(self):
+        """Return the URL of this node."""
+        url_prefix = self.values.get("_url_prefix", "")
+        return f"{url_prefix}{self.output_path}"
+
+    @cached_property
+    def input_file_path(self):
+        """Return the relative path of the input file in the filesystem."""
+        if self.is_root:
+            return Path(".")
+        return self.parent.input_file_path / self.input_name
+
+    @cached_property
+    def output_file_path(self):
+        """Return the relative path of the output file in the filesystem."""
+        if self.is_root:
+            return Path(".")
+        return self.parent.output_file_path / self.output_name
+
+    @cached_property
+    def absolute_input_file_path(self):
         """Return the absolute path of the input file."""
-        return (self.layer.path / self.input_path).absolute()
+        return (self.layer.path / self.input_file_path).absolute()
 
     def get_absolute_output_path(self, base_path: Path):
         """Return the absolute path of the output file."""
-        return (base_path / self.output_path).absolute()
+        return (base_path / self.output_file_path).absolute()
 
     @cached_property
     def level(self):
@@ -279,7 +320,7 @@ class Node:
             sorted_names = self.values["_sort"]
         except KeyError:
             raise SpekulatioValidationError(
-                f"{self.absolute_input_path}: value '_sort' should be defined in node "
+                f"{self.absolute_input_file_path}: value '_sort' should be defined in node "
                 "to be able to do traverse operations."
             )
 
@@ -291,21 +332,21 @@ class Node:
         # duplicate entries
         if len(sorted_names) > len(named_names):
             raise SpekulatioValidationError(
-                f"{self.absolute_input_path}: there are duplicated entries in the _sort list."
+                f"{self.absolute_input_file_path}: there are duplicated entries in the _sort list."
             )
 
         # wrong types
         for name in named_names:
             if not isinstance(name, str) or not name:
                 raise SpekulatioValidationError(
-                    f"{self.absolute_input_path}: wrong entry in _sort ('{name}'). "
+                    f"{self.absolute_input_file_path}: wrong entry in _sort ('{name}'). "
                     "All values must be non-empty strings."
                 )
 
         # non-existing entries
         if extra_names not in [set(), set("*")]:
             raise SpekulatioValidationError(
-                f"{self.absolute_input_path}: names '{extra_names}' listed in _sort are not ."
+                f"{self.absolute_input_file_path}: names '{extra_names}' listed in _sort are not ."
                 "children of the node."
             )
 
@@ -339,13 +380,13 @@ class Node:
     def write(self, base_path: Path) -> None:
         """Write node to disk."""
         self.action.execute(
-            input_path=self.absolute_input_path,
+            input_path=self.absolute_input_file_path,
             output_path=self.get_absolute_output_path(base_path),
             values=self.values
         )
 
     def __repr__(self):
-        return self.path
+        return str(self)
 
     def __str__(self):
-        return self.path
+        return f"{self.input_path} <{self.action}>> {self.output_path}"
