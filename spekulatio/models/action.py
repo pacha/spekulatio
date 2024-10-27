@@ -59,9 +59,9 @@ class Action:
         try:
             module = importlib.import_module(init_data["package"])
             action_class = getattr(module, init_data["name"])
-        except Exception as err:
+        except Exception:
             raise SpekulatioValidationError(
-                f"Wrong action: I can't find action {init_data['name']} in package {init_data['package']}: {err}."
+                f"Can't find action '{init_data['name']}' in package '{init_data['package']}'."
             )
         else:
             # remove class/package attributes before instantiating it

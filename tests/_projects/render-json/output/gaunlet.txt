@@ -1,0 +1,11 @@
+
+Gauntlet
+==========
+
+Year: 1985
+Publisher: Atari Games
+
+Genres:
+- Multiplayer
+- Dungeon crawl
+

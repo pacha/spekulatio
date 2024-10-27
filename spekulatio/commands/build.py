@@ -1,11 +1,12 @@
 
-import sys
+import logging
 from pathlib import Path
 
 import click
 
 from spekulatio.logs import log
-from spekulatio.operations import get_layers
+from spekulatio.logs import configure_logging
+from spekulatio.operations import build as build_operation
 
 
 @click.command()
@@ -17,6 +18,13 @@ from spekulatio.operations import get_layers
     help="Configuration file to use.",
 )
 @click.option(
+    "-o",
+    "--output",
+    "output_location",
+    required=True,
+    help="Output directory.",
+)
+@click.option(
     "-v", "--verbose", default=False, is_flag=True, help="Show processing messages."
 )
 @click.option(
@@ -24,27 +32,24 @@ from spekulatio.operations import get_layers
 )
 def build(
     config_location,
+    output_location,
     verbose,
     very_verbose,
 ):
     """Build output directory."""
 
     # configure logging
-    # if very_verbose:
-    #     log_level = log.DEBUG
-    # elif verbose:
-    #     log_level = log.INFO
-    # else:
-    #     log_level = log.WARN
+    if very_verbose:
+        log_level = logging.DEBUG
+    elif verbose:
+        log_level = logging.INFO
+    else:
+        log_level = logging.WARN
+    configure_logging(log_level)
+    log.debug(f"Log level: {logging.getLevelName(log_level)}")
 
-    # get layers
-    try:
-        spekulatio_file_path = Path(config_location)
-        layers = get_layers(spekulatio_file_path)
-    except Exception as err:
-        log.error(f"Error reading configuration. {err}")
-        sys.exit(1)
-
-    for layer in layers:
-        log.info(f"{layer.path.absolute()}")
-    log.info("Done.")
+    log.debug("Building...")
+    config_path = Path(config_location)
+    output_path = Path(output_location)
+    build_operation(config_path, output_path)
+    log.debug("Done.")

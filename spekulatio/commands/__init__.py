@@ -1,12 +1,30 @@
 
+import logging
+
 import click
 
 from .show import show
 from .build import build
 from .version import version
 
+from spekulatio.logs import log
+from spekulatio.exceptions import SpekulatioInputError
+from spekulatio.exceptions import SpekulatioInternalError
 
-@click.group(context_settings={"show_default": True})
+class CustomGroup(click.Group):
+    def invoke(self, ctx):
+        try:
+            super().invoke(ctx)
+        except SpekulatioInputError as err:
+            log.error(err)
+        except (Exception, SpekulatioInternalError) as err:
+            log_level = logging.getLevelName(log.getEffectiveLevel())
+            if log_level == "DEBUG":
+                log.exception(f"An unexpected error occurred: {err}")
+            else:
+                log.error(f"An unexpected error occurred: {err}")
+
+@click.group(cls=CustomGroup, context_settings={"show_default": True})
 def spekulatio():
     pass
 

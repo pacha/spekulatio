@@ -7,6 +7,7 @@ from schema import And
 from schema import Schema
 from schema import Optional
 
+from spekulatio.logs import log
 from spekulatio.lib.paths import to_relative_path
 from spekulatio.exceptions import SpekulatioValidationError
 from .node import Node
@@ -77,7 +78,7 @@ class Layer:
                     actions.append(action)
                 init_data["actions"] = actions
             except Exception as err:
-                raise SpekulatioValidationError(f"Invalid action: {err}")
+                raise SpekulatioValidationError(f"Invalid action at '{spekulatio_file_path}': {err}")
 
         return cls(spekulatio_file_path=spekulatio_file_path, **init_data)
 
@@ -97,6 +98,9 @@ class Layer:
     def apply_to(self, root: Node):
         """Apply a layer to an existent tree."""
 
+        log.debug(f"Spekulatio file: {self.spekulatio_file_path}")
+        log.debug(f"Input dir: {self.path}")
+
         # add layer to root
         root._layers.append(self)
         root._actions.append(create_dir_action)
@@ -114,5 +118,6 @@ class Layer:
                     action=action,
                     layer=self,
                 )
+                log.info(f"- {child_node} [{str(child_node.action.__class__.__name__)}]")
                 if child_path.is_dir():
                     self.apply_to_rec(node=child_node, path=child_path)

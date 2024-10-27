@@ -1,0 +1,35 @@
+
+__css_files:
+  scope: default
+  value:
+    - "/static/css/normalize.css"
+    - "/static/css/spekulatio.css"
+
+__js_files:
+  scope: default
+  value:
+    - "/static/js/spekulatio.js"
+
+__site:
+  scope: default
+  value:
+    name: My Site
+    author: Me
+    description: A brand new site
+    logo: null
+
+__language:
+  scope: default
+  value: false
+
+__prev_next_links:
+  scope: default
+  value: false
+
+__directories_as_titles:
+  scope: default
+  value: false
+
+__compact_sidebar_menu:
+  scope: default
+  value: false

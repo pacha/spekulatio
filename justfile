@@ -8,7 +8,7 @@ project_dir := justfile_directory()
   pip install -e ".[dev]"
 
 @test-all:
-  pytest tests/
+  pytest --capture=no -o log_cli=false tests/
 
 @test *params:
   pytest -vv -x -o log_cli=true {{ params }}

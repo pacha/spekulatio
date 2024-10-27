@@ -9,6 +9,7 @@ from schema import Optional
 from spekulatio.logs import log
 from spekulatio.models import Layer
 from spekulatio.lib.paths import to_relative_path
+from spekulatio.exceptions import SpekulatioInputError
 from spekulatio.exceptions import SpekulatioValidationError
 
 SPEKULATIO_FILE = "spekulatio.yaml"
@@ -40,6 +41,10 @@ def get_layers(
     try:
         text = spekulatio_file_path.read_text(encoding="utf-8")
         data = yaml.safe_load(text) or {}
+    except FileNotFoundError:
+        raise SpekulatioInputError(
+            f"No Spekulatio configuration file at '{spekulatio_file_path}'."
+        )
     except Exception as err:
         raise SpekulatioValidationError(
             f"Can't read file: {err}"

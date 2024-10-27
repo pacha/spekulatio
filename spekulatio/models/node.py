@@ -11,6 +11,8 @@ from jinja2 import Environment
 from jinja2 import FileSystemLoader
 
 from spekulatio.logs import log
+from spekulatio.logs import log_obj
+from spekulatio.paths import templates_path
 from spekulatio.exceptions import SpekulatioInputError
 from spekulatio.exceptions import SpekulatioValidationError
 from .action import Action
@@ -109,7 +111,7 @@ class Node:
 
     @cached_property
     def env(self):
-        template_dirs = [str(layer.path) for layer in self._layers]
+        template_dirs = [str(templates_path)] + [str(layer.path) for layer in self._layers]
         env = Environment(loader=FileSystemLoader(template_dirs))
         return env
 
@@ -389,4 +391,4 @@ class Node:
         return str(self)
 
     def __str__(self):
-        return f"{self.input_path} <{self.action}>> {self.output_path}"
+        return self.input_path or "/"
