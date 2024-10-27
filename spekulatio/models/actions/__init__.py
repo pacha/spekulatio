@@ -1,6 +1,7 @@
 from .noop import NoOp
 from .noop import noop_action
 from .copy import Copy
+from .unzip import Unzip
 from .render import Render
 from .md2html import Md2Html
 from .render_json import RenderJson

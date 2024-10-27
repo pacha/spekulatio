@@ -19,7 +19,7 @@ def compare_output(generated_output_path, expected_output_path) -> list:
             diff.append(f"Only in expected output {expected_output_path.name}: {name}")
         for subdir_result in result.subdirs.values():
             subdir_diff = process_result(subdir_result)
-            diff.expand(subdir_diff)
+            diff.extend(subdir_diff)
         return diff
 
     result = dircmp(generated_output_path, expected_output_path)
