@@ -7,10 +7,10 @@ import markdown
 from schema import Schema
 from schema import Optional
 
-from ..action import TextAction
+from ..action import RenderFromTextAction
 
 @dataclass
-class Md2Html(TextAction):
+class Md2Html(RenderFromTextAction):
     patterns: tuple[str] = ("*.md", "*.mkd", "*.mkdn", "*.mdwn", "*.mdwon", "*.markdown")
     output_name: str = "{{ _input_name.with_suffix('.html') }}"
     frontmatter: bool = True

@@ -1,12 +1,13 @@
 import importlib
 from typing import Any
+from typing import Optional
 from pathlib import Path
 from dataclasses import field
 from dataclasses import dataclass
 
 from schema import And
 from schema import Schema
-from schema import Optional
+from schema import Optional as OptionalField
 from jinja2 import Template
 from py_walk import get_parser_from_list
 from py_walk.models.parser import Parser
@@ -20,7 +21,7 @@ from spekulatio.lib.parse_values import parse_values_from_frontmatter
 @dataclass
 class Action:
     patterns: tuple[str] = field(default_factory=tuple)
-    output_name: str = "{{ _input_name }}"
+    output_name: Optional[str] = "{{ _input_name }}"
     parameters: dict[str, Any] = field(default_factory=dict)
     parser: Parser = field(init=False)
 
@@ -40,12 +41,12 @@ class Action:
             schema = Schema(
                 {
                     "name": And(str, error="'name' should be a string."),
-                    Optional("package", default="spekulatio"): And(str, error="'package' should be a string."),
-                    Optional("patterns"): And([str], error="'patterns' should be a list of strings."),
-                    Optional("output_name"): And(str, error="'output_name' should be a string."),
-                    Optional("frontmatter"): And(bool, error="'frontmatter' should be true or false."),
-                    Optional("render_content"): And(bool, error="'render_content' should be true or false."),
-                    Optional("parameters"): And(
+                    OptionalField("package", default="spekulatio"): And(str, error="'package' should be a string."),
+                    OptionalField("patterns"): And([str], error="'patterns' should be a list of strings."),
+                    OptionalField("output_name"): And(str, error="'output_name' should be a string."),
+                    OptionalField("frontmatter"): And(bool, error="'frontmatter' should be true or false."),
+                    OptionalField("render_content"): And(bool, error="'render_content' should be true or false."),
+                    OptionalField("parameters"): And(
                         {str: object},
                         error="'parameters' should be a dictionary with string keys.",
                     ),
@@ -91,6 +92,10 @@ class Action:
 
         # get output name template
         output_name = values.get("_output_name", self.output_name)
+        if not output_name:
+            raise SpekulatioValidationError(
+                f"You need to set 'output_name' to use the '{self.__class__.__name__}' action."
+            )
 
         # render template
         template = Template(output_name)
@@ -132,7 +137,7 @@ class Action:
         return self.name
 
 @dataclass
-class TextAction(Action):
+class RenderFromTextAction(Action):
     frontmatter: bool = False
     render_content: bool = False
 
@@ -176,3 +181,30 @@ class TextAction(Action):
         # override src
         values["_content"] = content
         return values
+
+
+@dataclass
+class RenderFromDataAction(Action):
+    output_name: Optional[str] = None
+
+    def get_output_name(self, values: dict[Any, Any]) -> str:
+        """Use the extension of the template if not explicit output_name template is passed."""
+        if "_output_name" not in values:
+            template_name = values["_template"]
+            template_path = Path(template_name)
+            values["_output_name"] = f"{{{{ _input_name.with_suffix('{template_path.suffix}') }}}}"
+        return super().get_output_name(values)
+
+    def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
+        """Render template by passing all values."""
+
+        # get values
+        env = values["_env"]
+        template_name = values["_template"]
+
+        # render template
+        template = env.get_template(template_name)
+        rendered_content = template.render(values)
+
+        # write content
+        output_path.write_text(rendered_content)

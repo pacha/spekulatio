@@ -3,10 +3,10 @@ from typing import Any
 from pathlib import Path
 from dataclasses import dataclass
 
-from ..action import TextAction
+from ..action import RenderFromTextAction
 
 @dataclass
-class Render(TextAction):
+class Render(RenderFromTextAction):
     frontmatter: bool = True
     render_content: bool = True
 

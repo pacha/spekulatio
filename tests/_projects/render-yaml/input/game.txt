@@ -1,0 +1,12 @@
+
+{{ name }}
+==========
+
+Year: {{ year }}
+Publisher: {{ publisher }}
+
+Genres:
+{% for genre in genres -%}
+    - {{ genre }}
+{% endfor %}
+

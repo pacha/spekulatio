@@ -1,0 +1,7 @@
+_template: "game.txt"
+name: "Gauntlet"
+year: 1985
+genres:
+  - Multiplayer
+  - Dungeon crawl
+publisher: "Atari Games"

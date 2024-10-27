@@ -1,5 +1,5 @@
 
-import json
+import yaml
 
 from typing import Any
 from pathlib import Path
@@ -10,10 +10,11 @@ from spekulatio.logs import log
 from ..action import RenderFromDataAction
 
 @dataclass
-class RenderJson(RenderFromDataAction):
-    patterns: tuple[str] = ("*.json", "*.JSON")
+class RenderYaml(RenderFromDataAction):
+    patterns: tuple[str] = ("*.yaml", "*.yml", "*.YAML", "*.YML")
     output_name = None
 
     def get_values(self, input_path: Path) -> dict[Any, Any]:
         """Return the content of the JSON file as values."""
-        return json.loads(input_path.read_text())
+        text = input_path.read_text(encoding="utf-8")
+        return yaml.safe_load(text)

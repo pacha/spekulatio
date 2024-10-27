@@ -4,5 +4,6 @@ from .copy import Copy
 from .render import Render
 from .md2html import Md2Html
 from .render_json import RenderJson
+from .render_yaml import RenderYaml
 from .create_dir import CreateDir
 from .create_dir import create_dir_action
