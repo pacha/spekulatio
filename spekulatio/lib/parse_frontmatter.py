@@ -2,7 +2,7 @@
 import re
 import yaml
 
-from spekulatio.exceptions import SpekulatioValidationError
+from spekulatio.exceptions import SpekulatioInputError
 
 FRONTMATTER_PATTERN = re.compile(
     r"^---\s*?^(.*?)^---\s*?^(.*)", re.MULTILINE | re.DOTALL
@@ -43,12 +43,12 @@ def parse_frontmatter(text: str):
     try:
         metadata = yaml.safe_load(frontmatter) or {}
     except Exception as err:
-        raise SpekulatioValidationError(f"Can't parse YAML in frontmatter: {err}")
+        raise SpekulatioInputError(f"Can't parse YAML in frontmatter: {err}")
 
     if not isinstance(metadata, dict):
         msg = (
             "The top level YAML element in the frontmatter of a file must be an object."
         )
-        raise SpekulatioValidationError(msg)
+        raise SpekulatioInputError(msg)
 
     return content, metadata

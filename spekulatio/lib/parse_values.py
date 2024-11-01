@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, Callable
 
 from spekulatio.logs import log
-from spekulatio.exceptions import SpekulatioValidationError
+from spekulatio.exceptions import SpekulatioInputError
 from .parse_frontmatter import parse_frontmatter
 
 def parse_values_from_frontmatter(path: Path):
@@ -17,7 +17,7 @@ def parse_values_from_frontmatter(path: Path):
 def parse_values_from_directory(path: Path, name: str = '_values'):
     """Extract values from a values file."""
     if path.exists() and not path.is_dir():
-        raise SpekulatioValidationError(f"{path} is not a directory.")
+        raise SpekulatioInputError(f"{path} is not a directory.")
 
     variants = [
         (f"{name}.yaml", "yaml"),

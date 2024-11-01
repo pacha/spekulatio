@@ -7,6 +7,3 @@ class SpekulatioInternalError(SpekulatioError):
 
 class SpekulatioInputError(SpekulatioError):
     """User input error."""
-
-class SpekulatioValidationError(SpekulatioInputError):
-    """User configuration error."""

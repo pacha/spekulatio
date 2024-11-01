@@ -14,7 +14,7 @@ from py_walk.models.parser import Parser
 
 from spekulatio.logs import log
 from spekulatio.exceptions import SpekulatioInternalError
-from spekulatio.exceptions import SpekulatioValidationError
+from spekulatio.exceptions import SpekulatioInputError
 from spekulatio.lib.parse_values import parse_values_from_frontmatter
 
 
@@ -54,14 +54,14 @@ class Action:
             )
             init_data = schema.validate(data)
         except Exception as err:
-            raise SpekulatioValidationError(f"Wrong configuration: {err}")
+            raise SpekulatioInputError(f"Wrong configuration: {err}")
 
         # get suitable class
         try:
             module = importlib.import_module(init_data["package"])
             action_class = getattr(module, init_data["name"])
         except Exception:
-            raise SpekulatioValidationError(
+            raise SpekulatioInputError(
                 f"Can't find action '{init_data['name']}' in package '{init_data['package']}'."
             )
         else:
@@ -76,7 +76,7 @@ class Action:
         try:
             action.validate_parameters()
         except Exception as err:
-            raise SpekulatioValidationError(
+            raise SpekulatioInputError(
                 f"Wrong set of parameters for action '{action.name}': {err}"
             )
 
@@ -93,7 +93,7 @@ class Action:
         # get output name template
         output_name = values.get("_output_name", self.output_name)
         if not output_name:
-            raise SpekulatioValidationError(
+            raise SpekulatioInputError(
                 f"You need to set 'output_name' to use the '{self.__class__.__name__}' action."
             )
 
@@ -101,7 +101,7 @@ class Action:
         template = Template(output_name)
         name = template.render(values)
         if not name:
-            raise SpekulatioValidationError(
+            raise SpekulatioInputError(
                 "Wrong output name for node. The output name for a node can't be an empty string. "
                 f"(output name template: {output_name})."
             )

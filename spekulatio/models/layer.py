@@ -9,7 +9,7 @@ from schema import Optional
 
 from spekulatio.logs import log
 from spekulatio.lib.paths import to_relative_path
-from spekulatio.exceptions import SpekulatioValidationError
+from spekulatio.exceptions import SpekulatioInputError
 from .node import Node
 from .action import Action
 from .actions import noop_action
@@ -49,22 +49,22 @@ class Layer:
             )
             init_data = schema.validate(data)
         except Exception as err:
-            raise SpekulatioValidationError(f"Wrong configuration: {err}")
+            raise SpekulatioInputError(f"Wrong configuration: {err}")
 
         # cast to proper types
         if "path" in init_data:
             try:
                 init_data["path"] = path_prefix / Path(init_data["path"])
             except Exception as err:
-                raise SpekulatioValidationError(
+                raise SpekulatioInputError(
                     f"Invalid path '{init_data['path']}': {err}"
                 )
             if not init_data["path"].exists():
-                raise SpekulatioValidationError(
+                raise SpekulatioInputError(
                     f"Can't find layer path '{init_data['path']}'"
                 )
             if not init_data["path"].is_dir():
-                raise SpekulatioValidationError(
+                raise SpekulatioInputError(
                     f"Layer path '{init_data['path']}' must be a directory"
                 )
         else:
@@ -78,7 +78,7 @@ class Layer:
                     actions.append(action)
                 init_data["actions"] = actions
             except Exception as err:
-                raise SpekulatioValidationError(f"Invalid action at '{spekulatio_file_path}': {err}")
+                raise SpekulatioInputError(f"Invalid action at '{spekulatio_file_path}': {err}")
 
         return cls(spekulatio_file_path=spekulatio_file_path, **init_data)
 

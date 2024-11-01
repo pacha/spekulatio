@@ -3,7 +3,6 @@ import pytest
 
 from spekulatio.operations import get_layers
 from spekulatio.models import Node
-from spekulatio.exceptions import SpekulatioValidationError
 
 def test_prune(fixtures_path):
     layer = get_layers(fixtures_path / "prune")[0]

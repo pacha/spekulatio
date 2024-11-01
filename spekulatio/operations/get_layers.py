@@ -11,7 +11,7 @@ from spekulatio.models import Layer
 from spekulatio.paths import default_layers_path
 from spekulatio.lib.paths import to_relative_path
 from spekulatio.exceptions import SpekulatioInputError
-from spekulatio.exceptions import SpekulatioValidationError
+from spekulatio.exceptions import SpekulatioInputError
 
 SPEKULATIO_FILE = "spekulatio.yaml"
 
@@ -64,7 +64,7 @@ def get_layers(
     # get linked layer definitions
     layer_definitions = data.pop("layers", [])
     if not isinstance(layer_definitions, list):
-        raise SpekulatioValidationError(
+        raise SpekulatioInputError(
             f"{spekulatio_file_path}: 'layers' should be a list of dictionaries."
         )
 
@@ -84,12 +84,12 @@ def get_layers(
             base_path = spekulatio_file_path.parent
             input_path = Path(validated_data["path"])
         except Exception as err:
-            raise SpekulatioValidationError(f"File {spekulatio_file_path}: {err}")
+            raise SpekulatioInputError(f"File {spekulatio_file_path}: {err}")
 
         # check that the layer file hasn't been already processed
         full_path = (base_path / input_path).resolve()
         if full_path in all_paths:
-            raise SpekulatioValidationError(
+            raise SpekulatioInputError(
                 f"File {spekulatio_file_path}: detected a cyclic dependency"
                 f"{full_path} is included at least two times in the configuration."
             )

@@ -3,7 +3,7 @@ import pytest
 
 from spekulatio.operations import get_layers
 from spekulatio.operations import create_tree
-from spekulatio.exceptions import SpekulatioValidationError
+from spekulatio.exceptions import SpekulatioInputError
 
 def test_sorting_default(fixtures_path):
     layers = get_layers(fixtures_path / "sorting-default")
@@ -96,11 +96,11 @@ def test_sorting_sink_bottom(fixtures_path):
 def test_sorting_duplicate(fixtures_path):
     layers = get_layers(fixtures_path / "sorting-duplicate")
 
-    with pytest.raises(SpekulatioValidationError):
+    with pytest.raises(SpekulatioInputError):
         _ = create_tree(layers)
 
 def test_sorting_duplicate_sink(fixtures_path):
     layers = get_layers(fixtures_path / "sorting-duplicate-sink")
 
-    with pytest.raises(SpekulatioValidationError):
+    with pytest.raises(SpekulatioInputError):
         _ = create_tree(layers)

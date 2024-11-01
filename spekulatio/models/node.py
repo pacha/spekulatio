@@ -14,7 +14,7 @@ from spekulatio.logs import log
 from spekulatio.logs import log_obj
 from spekulatio.paths import templates_path
 from spekulatio.exceptions import SpekulatioInputError
-from spekulatio.exceptions import SpekulatioValidationError
+from spekulatio.exceptions import SpekulatioInputError
 from .action import Action
 from .actions import CreateDir
 
@@ -321,7 +321,7 @@ class Node:
         try:
             sorted_names = self.values["_sort"]
         except KeyError:
-            raise SpekulatioValidationError(
+            raise SpekulatioInputError(
                 f"{self.absolute_input_file_path}: value '_sort' should be defined in node "
                 "to be able to do traverse operations."
             )
@@ -333,21 +333,21 @@ class Node:
 
         # duplicate entries
         if len(sorted_names) > len(named_names):
-            raise SpekulatioValidationError(
+            raise SpekulatioInputError(
                 f"{self.absolute_input_file_path}: there are duplicated entries in the _sort list."
             )
 
         # wrong types
         for name in named_names:
             if not isinstance(name, str) or not name:
-                raise SpekulatioValidationError(
+                raise SpekulatioInputError(
                     f"{self.absolute_input_file_path}: wrong entry in _sort ('{name}'). "
                     "All values must be non-empty strings."
                 )
 
         # non-existing entries
         if extra_names not in [set(), set("*")]:
-            raise SpekulatioValidationError(
+            raise SpekulatioInputError(
                 f"{self.absolute_input_file_path}: names '{extra_names}' listed in _sort are not ."
                 "children of the node."
             )

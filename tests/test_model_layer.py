@@ -2,7 +2,7 @@
 import pytest
 
 from spekulatio.operations import get_layers
-from spekulatio.exceptions import SpekulatioValidationError
+from spekulatio.exceptions import SpekulatioInputError
 
 def test_create_empty_layer(fixtures_path):
     layer = get_layers(fixtures_path / "layer-empty")[0]
@@ -16,5 +16,5 @@ def test_create_layer(fixtures_path):
     assert layer.values["bar"] == 2
 
 def test_fail_create_layer(fixtures_path):
-    with pytest.raises(SpekulatioValidationError):
+    with pytest.raises(SpekulatioInputError):
         _ = get_layers(fixtures_path / "layer-wrong")

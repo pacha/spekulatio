@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from spekulatio.models import Action
-from spekulatio.exceptions import SpekulatioValidationError
+from spekulatio.exceptions import SpekulatioInputError
 
 def test_action_create():
     action = Action.from_dict({
@@ -15,7 +15,7 @@ def test_action_create():
     assert action.output_name == "{{ _input_name }}"
 
 def test_action_fail_extra_fields():
-    with pytest.raises(SpekulatioValidationError):
+    with pytest.raises(SpekulatioInputError):
         _ = Action.from_dict({
             "name": "Copy",
             "patterns": ["*.txt"],
@@ -23,7 +23,7 @@ def test_action_fail_extra_fields():
         })
 
 def test_action_fail_wrong_parameters():
-    with pytest.raises(SpekulatioValidationError):
+    with pytest.raises(SpekulatioInputError):
         _ = Action.from_dict({
             "name": "Copy",
             "patterns": ["*.jpeg", "*.jpg"],
