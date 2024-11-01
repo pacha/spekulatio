@@ -106,7 +106,8 @@ class Layer:
         root._actions.append(create_dir_action)
 
         # insert or update files and directories from layer
-        self.apply_to_rec(node=root, path=self.path)
+        if self.actions:
+            self.apply_to_rec(node=root, path=self.path)
 
     def apply_to_rec(self, node: Node, path: Path):
         """Apply layer per directory, recursively."""

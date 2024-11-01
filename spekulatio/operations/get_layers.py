@@ -8,6 +8,7 @@ from schema import Optional
 
 from spekulatio.logs import log
 from spekulatio.models import Layer
+from spekulatio.paths import default_layers_path
 from spekulatio.lib.paths import to_relative_path
 from spekulatio.exceptions import SpekulatioInputError
 from spekulatio.exceptions import SpekulatioValidationError
@@ -15,7 +16,8 @@ from spekulatio.exceptions import SpekulatioValidationError
 SPEKULATIO_FILE = "spekulatio.yaml"
 
 def get_layers(
-    spekulatio_file_path: Path,
+    input_path: Path,
+    base_path: typing.Optional[Path] = None,
     all_paths: typing.Optional[set[Layer]] = None,
 ) -> list[Layer]:
     """Get list of layers defined in a Spekulatio configuration file.
@@ -25,29 +27,38 @@ def get_layers(
     """
     layers: list[Layer] = []
 
-    # always normalize the spekulatio file path
-    spekulatio_file_path = spekulatio_file_path.resolve()
+    # determine actual spekulatio file path
+    # (in case the user pased just a directory or we have to check the default layers path)
+    user_provided_path = base_path / input_path if base_path else input_path
+    fallback_path = default_layers_path / input_path
 
-    # allow passing only the parent directory instead of the path to the spekulatio file
-    if spekulatio_file_path.is_dir():
-        spekulatio_file_path = spekulatio_file_path / SPEKULATIO_FILE
+    paths = [
+        user_provided_path,
+        user_provided_path / SPEKULATIO_FILE,
+        fallback_path,
+        fallback_path / SPEKULATIO_FILE,
+    ]
+    for path in paths:
+        if path.is_file():
+            spekulatio_file_path = path
+            break
+    else:
+        raise SpekulatioInputError(
+            f"Can't find configuration file at '{user_provided_path}'."
+        )
 
     # create a set of spekulatio file paths to detect cyclic references
     if not all_paths:
         all_paths = set()
-    all_paths.add(spekulatio_file_path)
+    all_paths.add(spekulatio_file_path.resolve())
 
     # read file
     try:
         text = spekulatio_file_path.read_text(encoding="utf-8")
         data = yaml.safe_load(text) or {}
-    except FileNotFoundError:
-        raise SpekulatioInputError(
-            f"No Spekulatio configuration file at '{spekulatio_file_path}'."
-        )
     except Exception as err:
-        raise SpekulatioValidationError(
-            f"Can't read file: {err}"
+        raise SpekulatioInputError(
+            f"Can't read configuration file: {err}"
         )
 
     # get linked layer definitions
@@ -70,20 +81,21 @@ def get_layers(
         # get path
         try:
             validated_data = schema.validate(layer_definition)
-            path = spekulatio_file_path.parent / Path(validated_data["path"])
+            base_path = spekulatio_file_path.parent
+            input_path = Path(validated_data["path"])
         except Exception as err:
             raise SpekulatioValidationError(f"File {spekulatio_file_path}: {err}")
 
         # check that the layer file hasn't been already processed
-        resolved_path = path.resolve()
-        if resolved_path in all_paths:
+        full_path = (base_path / input_path).resolve()
+        if full_path in all_paths:
             raise SpekulatioValidationError(
                 f"File {spekulatio_file_path}: detected a cyclic dependency"
-                f"{path} is included at least two times in the configuration."
+                f"{full_path} is included at least two times in the configuration."
             )
 
         # get all layers from this spekulatio file
-        linked_layers = get_layers(path, all_paths)
+        linked_layers = get_layers(input_path, base_path, all_paths)
         layers.extend(linked_layers)
 
     # get main layer

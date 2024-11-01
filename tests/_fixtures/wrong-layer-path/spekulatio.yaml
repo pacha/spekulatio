@@ -1,0 +1,3 @@
+
+layers:
+  - path: foo   # this doesn't exist

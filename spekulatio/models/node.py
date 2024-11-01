@@ -226,12 +226,18 @@ class Node:
 
     @cached_property
     def is_dir(self):
-        return isinstance(self.action, CreateDir)
+        return self.absolute_input_file_path.is_dir()
 
     @property
     def children(self):
         self.sort()
         return list(self._children.values())
+
+    def traverse(self):
+        """Retrieve all descendants of this node."""
+        for child in self.children:
+            yield child
+            yield from child.traverse()
 
     def __truediv__(self, other) -> "Node":
         if isinstance(other, str):
@@ -286,12 +292,6 @@ class Node:
             child._layers.append(layer)
             child._actions.append(action)
         return child
-
-    def traverse(self):
-        """Retrieve all descendants of this node."""
-        for child in self.children:
-            yield child
-            yield from child.traverse()
 
     def prune(self):
         """Remove branches that don't end in a file."""
