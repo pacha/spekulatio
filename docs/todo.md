@@ -6,3 +6,4 @@
 * No processing if there are no actions
 * `_skip`
 * `_title`
+* Caching

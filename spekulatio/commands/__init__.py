@@ -5,6 +5,7 @@ import click
 
 from .show import show
 from .build import build
+from .serve import serve
 from .version import version
 
 from spekulatio.logs import log
@@ -31,4 +32,5 @@ def spekulatio():
 
 spekulatio.add_command(show)  # type: ignore
 spekulatio.add_command(build)  # type: ignore
+spekulatio.add_command(serve)  # type: ignore
 spekulatio.add_command(version)  # type: ignore
