@@ -110,10 +110,9 @@ class Action:
     def validate_parameters(self):
         """Validate parameter names and types.
 
-        To be overloaded by the specific Action sub-classes.
+        To be overloaded by the specific Action sub-classes. No validation by default.
         """
-        schema = Schema({})
-        schema.validate(self.parameters)
+        pass
 
     def get_values(self, input_path: Path) -> dict[Any, Any]:
         """Don't return anything by default."""
