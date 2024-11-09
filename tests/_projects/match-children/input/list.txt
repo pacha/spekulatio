@@ -1,0 +1,10 @@
+
+List of HTML files:
+{% for child in _this.get_children() %}
+  - {{ child }}
+{% endfor %}
+
+List of non-skipped files:
+{% for child in _this.get_children() %}
+  - {{ child }}
+{% endfor %}

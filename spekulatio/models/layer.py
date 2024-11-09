@@ -8,11 +8,9 @@ from schema import Schema
 from schema import Optional
 
 from spekulatio.logs import log
-from spekulatio.lib.paths import to_relative_path
 from spekulatio.exceptions import SpekulatioInputError
 from .node import Node
 from .action import Action
-from .actions import noop_action
 from .actions import create_dir_action
 
 
@@ -114,11 +112,14 @@ class Layer:
         for child_path in path.iterdir():
             action = self.get_action(child_path)
             if action:
-                child_node = node.upsert_child(
-                    name=child_path.name,
-                    action=action,
-                    layer=self,
-                )
+                try:
+                    child_node = node.upsert_child(
+                        name=child_path.name,
+                        action=action,
+                        layer=self,
+                    )
+                except Exception as err:
+                    log.exception(f"- {child_node}: {err}")
                 log.info(f"- {child_node} [{str(child_node.action.__class__.__name__)}]")
                 if child_path.is_dir():
                     self.apply_to_rec(node=child_node, path=child_path)

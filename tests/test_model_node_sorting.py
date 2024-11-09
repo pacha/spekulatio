@@ -96,11 +96,13 @@ def test_sorting_sink_bottom(fixtures_path):
 def test_sorting_duplicate(fixtures_path):
     layers = get_layers(fixtures_path / "sorting-duplicate")
 
+    root = create_tree(layers)
     with pytest.raises(SpekulatioInputError):
-        _ = create_tree(layers)
+        _ = root.get("dir1").children
 
 def test_sorting_duplicate_sink(fixtures_path):
     layers = get_layers(fixtures_path / "sorting-duplicate-sink")
 
+    root = create_tree(layers)
     with pytest.raises(SpekulatioInputError):
-        _ = create_tree(layers)
+        _ = root.get("dir1").children

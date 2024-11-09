@@ -1,0 +1,14 @@
+@import 'imports/_colors';
+
+.foo {
+  color: tomato;
+
+  a {
+    color: $text-color-light;
+
+    &:hover
+    {
+        text-decoration: underline;
+    }
+  }
+}

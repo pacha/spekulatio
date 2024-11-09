@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html {{ 'lang="' ~  language  ~ '"' if language }}>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        {% if description %}
+        <meta name="description" content="{{ description }}">
+        {% endif %}
+
+        {% include "spekulatio-theme/templates/sections/head-extra.html" ignore missing %}
+
+        {% for css_file in css_files %}
+            <link rel="stylesheet" href="{{ css_file }}">
+        {% endfor %}
+
+        {% for js_file in js_files %}
+            <script src="{{ js_file }}"></script>
+        {% endfor %}
+
+        <title>{{ site_name }}</title>
+    </head>
+    <body>
+
+        {# header #}
+        {% include "spekulatio-theme/templates/sections/header.html" %}
+
+        {# mobile navigation #}
+        {# {% include "spekulatio-theme/templates/sections/mobile-nav.html" %} #}
+
+        {# main block #}
+        {% block main %}
+        <main class="spkt">
+            {{ _content }}
+        </main>
+        {% endblock main %}
+
+        {# Footer #}
+        {% include "spekulatio-theme/templates/sections/footer.html" %}
+
+    </body>
+</html>
+

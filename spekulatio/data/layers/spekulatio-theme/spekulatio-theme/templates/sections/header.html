@@ -1,0 +1,25 @@
+{% from 'spekulatio-theme/templates/helpers/icon.html' import icon %}
+<header class="spkt">
+    <nav id="site-name">
+        <a href="/">{% if site_logo %}<img class="logo" src="{{ site_logo }}" alt="{{ site_name }}">{% endif %} {{ site_name }}</a>
+    </nav>
+
+    {# main menu (shown in desktop) #}
+    <nav id="main-menu-desktop">
+        {% for child in _root.children %}
+            <a {{ 'class=active' if _this.is_descendant_of(child) }} href="{{ child.url }}">
+                {% if 'icon' in child.values %}
+                    {{ icon(child.values.icon, child.values.icon_class or '') }}
+                {% endif %}
+                {{ child.title }}
+            </a>
+        {% endfor %}
+    </nav>
+
+    {# hamburger menu (shown in mobile) #}
+    <nav class="main-menu-mobile">
+        <a href="javascript:;" onclick="toggleVisibility('primary-navigation-mobile')" aria-label="Menu" >
+            <svg class="menu-icon"><use xlink:href="/static/icons/feather-sprite.svg#menu"/></svg>
+        </a>
+    </nav>
+</header>

@@ -1,0 +1,21 @@
+{% if prev_next_links %}
+<div id="prev-next-links">
+
+    <div>
+    {% if _this.prev and _this.prev.values.prev_next_links %}
+    « <a class="reference external" href="{{ _this.prev.url }}">{{ _this.prev.title }}</a>
+    {% endif %}
+    </div>
+
+    <div class="line-block">
+        <div class="line"><br></div>
+    </div>
+
+    <div>
+    {% if _this.next and _this.next.values.prev_next_links %}
+    <a class="reference external" href="{{ _this.next.url }}">{{ _this.next.title }}</a> »
+    {% endif %}
+    </div>
+
+</div>
+{% endif %}

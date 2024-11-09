@@ -1,4 +1,0 @@
-actions:
-  - name: Copy
-    patterns:
-      - "*.css"

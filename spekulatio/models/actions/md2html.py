@@ -6,7 +6,9 @@ from dataclasses import dataclass
 import markdown
 from schema import Schema
 from schema import Optional
+from jinja2 import Template
 
+from spekulatio.exceptions import SpekulatioInternalError
 from ..action import RenderFromTextAction
 
 @dataclass
@@ -28,25 +30,34 @@ class Md2Html(RenderFromTextAction):
         )
         schema.validate(self.parameters)
 
-    def process_values(self, values: dict[Any, Any]) -> dict[Any, Any]:
-        """Create and modify values before executing the action."""
+    def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
+        """Render current file and write it to the output path."""
+
+        # get source
+        try:
+            src = values["_src"]
+        except KeyError:
+            raise SpekulatioInternalError(
+                f"Malformed action '{self.__class__.__name__}': '_src' must be defined "
+                "before calling the execute method of this class."
+            )
+
         # get content
-        values = super().process_values(values)
-        md_content = values["_content"]
+        if self.render_content:
+            src_template = Template(src)
+            md_content = src_template.render(values)
+        else:
+            md_content = src
 
         # convert markdown
         md = markdown.Markdown(**self.parameters)
-        html_content = md.convert(md_content)
+        content = md.convert(md_content)
 
         # update values
-        values["_content"] = html_content
+        values["_md"] = md
+        values["_content"] = content
         if hasattr(md, 'toc_tokens'):
             values["_toc"] = md.toc_tokens
-
-        return values
-
-    def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
-        """Render current file and write it to the output path."""
 
         # get values
         env = values["_env"]

@@ -1,0 +1,11 @@
+.foo {
+  color: tomato;
+}
+
+.foo a {
+  color: #a5d16b;
+}
+
+.foo a:hover {
+  text-decoration: underline;
+}

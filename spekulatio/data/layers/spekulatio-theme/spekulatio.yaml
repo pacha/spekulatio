@@ -1,0 +1,22 @@
+path: .
+actions:
+  - name: CompileSass
+    parameters:
+      output_style: expanded
+  - name: Copy
+    patterns:
+      - "*.css"
+      - "*.js"
+values:
+  site_name: My Site
+  author: Me
+  description: A brand new site
+  logo: null
+  language: false
+  prev_next_links: false
+  footer_text: ""
+
+  css_files: []
+  js_files: []
+  directories_as_titles: false
+  compact_sidebar_menu: false

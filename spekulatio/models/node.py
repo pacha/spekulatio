@@ -2,6 +2,7 @@
 from pathlib import Path
 from typing import Any
 from typing import Optional
+from typing import Callable
 from dataclasses import field
 from dataclasses import dataclass
 from functools import cached_property
@@ -13,7 +14,6 @@ from jinja2 import FileSystemLoader
 from spekulatio.logs import log
 from spekulatio.logs import log_obj
 from spekulatio.paths import templates_path
-from spekulatio.exceptions import SpekulatioInputError
 from spekulatio.exceptions import SpekulatioInputError
 from .action import Action
 from .actions import CreateDir
@@ -91,9 +91,6 @@ class Node:
         effective_values["_i"] = effective_values["_input_name"]
         effective_values["_env"] = self.root.env
 
-        # add action values
-        effective_values = self.action.process_values(effective_values)
-
         return effective_values
 
     @cached_property
@@ -140,6 +137,10 @@ class Node:
         return self.input_path
 
     @cached_property
+    def title(self):
+        return self.values.get("_title", self.input_file_path.name)
+
+    @cached_property
     def url(self):
         """Return the URL of this node."""
         url_prefix = self.values.get("_url_prefix", "")
@@ -168,6 +169,10 @@ class Node:
         """Return the absolute path of the output file."""
         return (base_path / self.output_file_path).absolute()
 
+    @property
+    def output_extension(self):
+        return self.output_file_path.suffix
+
     @cached_property
     def level(self):
         """Return the number of nodes between this node and the root."""
@@ -182,6 +187,10 @@ class Node:
     @cached_property
     def layer(self):
         return self._layers[-1]
+
+    @property
+    def layers(self):
+        return self._layers
 
     @cached_property
     def prev_sibling(self):
@@ -234,10 +243,25 @@ class Node:
         return list(self._children.values())
 
     def traverse(self):
-        """Retrieve all descendants of this node."""
         for child in self.children:
             yield child
             yield from child.traverse()
+
+    def get_children(self, match: Optional[Callable] = lambda node: True):
+        return [child for child in self.children if match(child)]
+
+    def get_descentants(self, match: Optional[Callable] = lambda node: node):
+        for child in self.children:
+            if match(child):
+                yield child
+                yield from child.descentants()
+
+    def is_descendant_of(self, ancestor: "Node"):
+        if self == ancestor:
+            return True
+        elif self.is_root:
+            return False
+        return self.parent.is_descendant_of(ancestor)
 
     def __truediv__(self, other) -> "Node":
         if isinstance(other, str):
@@ -295,10 +319,12 @@ class Node:
 
     def prune(self):
         """Remove branches that don't end in a file."""
-        for child in list(self.children):
+        # convert to list so that the dictionary can be modified in-place
+        children = list(self._children.items())
+        for name, child in children:  # convert to list since the dictionary is
             child.prune()
             if not child._children and child.is_dir:
-                del self._children[child.name]
+                del self._children[name]
                 child.parent = None
 
     def sort(self):
@@ -379,13 +405,19 @@ class Node:
         # mark as sorted
         self._sorted = True
 
+        for child in self._children:
+            log.info(f"{child}")
+
     def write(self, base_path: Path) -> None:
         """Write node to disk."""
-        self.action.execute(
-            input_path=self.absolute_input_file_path,
-            output_path=self.get_absolute_output_path(base_path),
-            values=self.values
-        )
+        try:
+            self.action.execute(
+                input_path=self.absolute_input_file_path,
+                output_path=self.get_absolute_output_path(base_path),
+                values=self.values
+            )
+        except Exception as err:
+            raise Exception(f"--- {self.input_path}: {err}") from err
 
     def __repr__(self):
         return str(self)

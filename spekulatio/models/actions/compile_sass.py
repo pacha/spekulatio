@@ -9,7 +9,7 @@ from ..action import RenderFromTextAction
 
 @dataclass
 class CompileSass(RenderFromTextAction):
-    patterns: tuple[str] = ("*.sass", "*.scss", "*.SASS", "*.SCSS")
+    patterns: tuple[str] = ("[!_]*.sass", "[!_]*.scss", "[!_]*.SASS", "[!_]*.SCSS")
     output_name: str = "{{ _input_name.with_suffix('.css') }}"
     frontmatter: bool = False
     render_content: bool = False
@@ -25,9 +25,14 @@ class CompileSass(RenderFromTextAction):
         # list of importers (<priority>, <function>)
         importers = [(0, importer)]
 
+        # get import paths (all layers in order)
+        node = values["_this"]
+        root = values["_root"]
+        include_paths = [str(layer.path.resolve() / node.input_file_path.parent) for layer in root.layers]
+
         # get content
         content = sass.compile(
-            filename=str(input_path), importers=importers, **self.parameters
+            filename=str(input_path), importers=importers, include_paths=include_paths, **self.parameters
         )
 
         # write file

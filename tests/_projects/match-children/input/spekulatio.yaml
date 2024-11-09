@@ -1,0 +1,9 @@
+path: .
+actions:
+  - name: Md2Html
+  - name: Copy
+    patterns:
+      - "*.css"
+  - name: Render
+    patterns:
+      - "*.txt"

@@ -13,7 +13,6 @@ from py_walk import get_parser_from_list
 from py_walk.models.parser import Parser
 
 from spekulatio.logs import log
-from spekulatio.exceptions import SpekulatioInternalError
 from spekulatio.exceptions import SpekulatioInputError
 from spekulatio.lib.parse_values import parse_values_from_frontmatter
 
@@ -118,10 +117,6 @@ class Action:
         """Don't return anything by default."""
         return {}
 
-    def process_values(self, values: dict[Any, Any]) -> dict[Any, Any]:
-        """Don't modify anything by default."""
-        return values
-
     def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
         """Execute the action.
 
@@ -155,32 +150,6 @@ class RenderFromTextAction(Action):
         values["_src"] = src
         values.update(frontmatter_values)
         return values
-
-    def process_values(self, values: dict[Any, Any]) -> dict[Any, Any]:
-        """Render content of the file if 'render_content' is active."""
-
-        # skip rendering if necessary
-        if not self.render_content:
-            values["_content"] = values["_src"]
-            return values
-
-        # get source
-        try:
-            src = values["_src"]
-        except KeyError:
-            raise SpekulatioInternalError(
-                f"Malformed action '{self.name}': it tries to make use of a '_src' value "
-                "that has not been defined before."
-            )
-
-        # render template
-        template = Template(src)
-        content = template.render(values)
-
-        # override src
-        values["_content"] = content
-        return values
-
 
 @dataclass
 class RenderFromDataAction(Action):
