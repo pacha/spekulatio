@@ -5,6 +5,7 @@ from typing import Optional
 from typing import Callable
 from dataclasses import field
 from dataclasses import dataclass
+from functools import partial
 from functools import cached_property
 
 from cels import patch_dictionary
@@ -89,7 +90,7 @@ class Node:
         effective_values["_this"] = self
         effective_values["_input_name"] = Path(self.name)
         effective_values["_i"] = effective_values["_input_name"]
-        effective_values["_env"] = self.root.env
+        effective_values["_env"] = self.env
 
         return effective_values
 
@@ -106,11 +107,45 @@ class Node:
     def output_name(self):
         return self.action.get_output_name(self.values)
 
-    @cached_property
+    @property
     def env(self):
-        template_dirs = [str(templates_path)] + [str(layer.path) for layer in self._layers]
-        env = Environment(loader=FileSystemLoader(template_dirs))
-        return env
+        environment = self.base_env
+        get_node = self.get if self.is_root else self.parent.get
+        environment.globals["node"] = get_node
+        return environment
+
+    @cached_property
+    def base_env(self):
+        default_dirs = [str(templates_path)]
+        layer_dirs = [str(layer.path) for layer in self.root._layers]
+        template_dirs = default_dirs + layer_dirs
+        environment = Environment(loader=FileSystemLoader(template_dirs))
+
+        def with_value(nodes, key):
+            yield from (node for node in nodes if key in node.values)
+
+        def without_value(nodes, key):
+            yield from (node for node in nodes if key not in node.values)
+
+        def filter_nodes(nodes, key, value, operation_name):
+            for node in nodes:
+                try:
+                    node_value = node.values[key]
+                    operation = getattr(node_value, operation_name)
+                    if operation(value):
+                        yield node
+                except Exception:
+                    pass
+
+        environment.filters['with_value'] = with_value
+        environment.filters['without_value'] = without_value
+        environment.filters['value_eq'] = partial(filter_nodes, operation_name="__eq__")
+        environment.filters['value_ne'] = partial(filter_nodes, operation_name="__ne__")
+        environment.filters['value_gt'] = partial(filter_nodes, operation_name="__gt__")
+        environment.filters['value_lt'] = partial(filter_nodes, operation_name="__lt__")
+        environment.filters['value_ge'] = partial(filter_nodes, operation_name="__ge__")
+        environment.filters['value_le'] = partial(filter_nodes, operation_name="__le__")
+        return environment
 
     @cached_property
     def input_path(self):
@@ -239,8 +274,20 @@ class Node:
 
     @property
     def children(self):
+        return list(self.iter_children)
+
+    @property
+    def descendants(self):
+        return list(self.iter_descendants)
+
+    @property
+    def iter_children(self):
         self.sort()
-        return list(self._children.values())
+        yield from self._children.values()
+
+    @property
+    def iter_descendants(self):
+        yield from self.traverse()
 
     def traverse(self):
         for child in self.children:
@@ -248,7 +295,7 @@ class Node:
             yield from child.traverse()
 
     def get_children(self, match: Optional[Callable] = lambda node: True):
-        return [child for child in self.children if match(child)]
+        return (child for child in self.children if match(child))
 
     def get_descentants(self, match: Optional[Callable] = lambda node: node):
         for child in self.children:

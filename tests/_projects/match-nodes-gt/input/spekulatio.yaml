@@ -1,0 +1,6 @@
+path: .
+actions:
+  - name: RenderJson
+  - name: Render
+    patterns:
+      - "*.txt"

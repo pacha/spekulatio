@@ -1,0 +1,6 @@
+
+Nodes with "number" greater than 2:
+{% for child in node("/dir1").descendants | value_gt("number", 2) %}
+  - {{ child }}
+{% endfor %}
+

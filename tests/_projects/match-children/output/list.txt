@@ -1,5 +1,11 @@
 
 List of HTML files:
 
+  - /dir1/bar.md
+
 
 List of non-skipped files:
+
+  - /dir1
+
+  - /list.txt

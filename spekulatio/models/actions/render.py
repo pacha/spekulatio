@@ -26,7 +26,8 @@ class Render(RenderFromTextAction):
 
         # get content
         if self.render_content:
-            src_template = Template(src)
+            env = values["_env"]
+            src_template = env.from_string(src)
             content = src_template.render(values)
         else:
             content = values["_src"]
