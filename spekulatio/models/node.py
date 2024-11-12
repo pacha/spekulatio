@@ -290,9 +290,14 @@ class Node:
         yield from self.traverse()
 
     def traverse(self):
-        for child in self.children:
+        for child in self.iter_children:
             yield child
             yield from child.traverse()
+
+    def unsorted_traverse(self):
+        for child in self._children.values():
+            yield child
+            yield from child.unsorted_traverse()
 
     def get_children(self, match: Optional[Callable] = lambda node: True):
         return (child for child in self.children if match(child))
@@ -301,7 +306,7 @@ class Node:
         for child in self.children:
             if match(child):
                 yield child
-                yield from child.descentants()
+                yield from child.get_descentants(match=match)
 
     def is_descendant_of(self, ancestor: "Node"):
         if self == ancestor:
@@ -452,22 +457,39 @@ class Node:
         # mark as sorted
         self._sorted = True
 
-        for child in self._children:
-            log.info(f"{child}")
+    def write(self, base_path: Path, cache: bool) -> None:
+        """Write node to disk.
 
-    def write(self, base_path: Path) -> None:
-        """Write node to disk."""
+        :base_path: root of the output path
+        :cache: don't write the file if it exists and its output timestamp is
+            newer than the update timestamp of the input file.
+        """
+        input_path = self.absolute_input_file_path
+        output_path = self.get_absolute_output_path(base_path)
+
+        # skip if file is cached
+        if cache and output_path and output_path.exists():
+            input_timestamp = input_path.stat().st_mtime
+            output_timestamp = output_path.stat().st_mtime
+            if output_timestamp > input_timestamp:
+                log.info(f"- {self} (Cached)")
+                return
+
+        # execute action
+        log.info(f"- {self} [{self.action.__class__.__name__}]")
         try:
             self.action.execute(
-                input_path=self.absolute_input_file_path,
-                output_path=self.get_absolute_output_path(base_path),
+                input_path=input_path,
+                output_path=output_path,
                 values=self.values
             )
         except Exception as err:
-            raise Exception(f"--- {self.input_path}: {err}") from err
+            raise Exception(f"--- {self}: {err}") from err
 
     def __repr__(self):
         return str(self)
 
     def __str__(self):
-        return self.input_path or "/"
+        input_path = self.input_path or "/"
+        output_path = self.output_path
+        return f"{input_path} -> {output_path}"

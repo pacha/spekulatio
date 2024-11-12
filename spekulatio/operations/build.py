@@ -9,7 +9,7 @@ from .get_layers import get_layers
 from .create_tree import create_tree
 from .write_tree import write_tree
 
-def build(spekulatio_file_path: Path, output_path: Path) -> None:
+def build(spekulatio_file_path: Path, output_path: Path, cache: bool) -> None:
     """Build project from a spekulation configuration file."""
 
     log.debug("Reading layer configuration...")
@@ -19,4 +19,4 @@ def build(spekulatio_file_path: Path, output_path: Path) -> None:
     root = create_tree(layers)
 
     log.debug("Writing output...")
-    write_tree(output_path, root)
+    write_tree(output_path, root, cache=cache)

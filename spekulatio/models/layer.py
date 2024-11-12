@@ -97,7 +97,7 @@ class Layer:
         """Apply a layer to an existent tree."""
 
         log.debug(f"Spekulatio file: {self.spekulatio_file_path}")
-        log.debug(f"Input dir: {self.path}")
+        log.debug(f"Path: {self.path}")
 
         # add layer to root
         root._layers.append(self)
@@ -120,6 +120,6 @@ class Layer:
                     )
                 except Exception as err:
                     log.exception(f"- {child_node}: {err}")
-                log.info(f"- {child_node} [{str(child_node.action.__class__.__name__)}]")
+                log.debug(f"- {child_node} [{str(child_node.action.__class__.__name__)}]")
                 if child_path.is_dir():
                     self.apply_to_rec(node=child_node, path=child_path)

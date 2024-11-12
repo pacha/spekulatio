@@ -25,6 +25,23 @@ from spekulatio.operations import build as build_operation
     help="Output directory.",
 )
 @click.option(
+    "-o",
+    "--output",
+    "output_location",
+    required=True,
+    help="Output directory.",
+)
+@click.option(
+    "--cache",
+    "cache",
+    is_flag=True,
+    default=False,
+    help=(
+        "Don't generate output files if they exist and have a newer update timestamp "
+        "than the associated input ones."
+    ),
+)
+@click.option(
     "-v", "--verbose", default=False, is_flag=True, help="Show processing messages."
 )
 @click.option(
@@ -33,6 +50,7 @@ from spekulatio.operations import build as build_operation
 def build(
     config_location,
     output_location,
+    cache,
     verbose,
     very_verbose,
 ):
@@ -51,5 +69,5 @@ def build(
     log.debug("Building...")
     config_path = Path(config_location)
     output_path = Path(output_location)
-    build_operation(config_path, output_path)
+    build_operation(config_path, output_path, cache=cache)
     log.debug("Done.")
