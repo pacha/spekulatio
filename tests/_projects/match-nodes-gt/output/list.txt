@@ -1,9 +1,9 @@
 
 Nodes with "number" greater than 2:
 
-  - /dir1/bat.json
+  - /dir1/bat.html
 
-  - /dir1/baz.json
+  - /dir1/baz.html
 
-  - /dir1/dir2/bam.json
+  - /dir1/dir2/bam.html
 

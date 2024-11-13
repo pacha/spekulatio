@@ -17,7 +17,6 @@ from spekulatio.logs import log_obj
 from spekulatio.paths import templates_path
 from spekulatio.exceptions import SpekulatioInputError
 from .action import Action
-from .actions import CreateDir
 
 
 @dataclass
@@ -490,6 +489,4 @@ class Node:
         return str(self)
 
     def __str__(self):
-        input_path = self.input_path or "/"
-        output_path = self.output_path
-        return f"{input_path} -> {output_path}"
+        return self.input_path or "/"

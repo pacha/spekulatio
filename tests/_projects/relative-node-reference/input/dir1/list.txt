@@ -1,6 +1,6 @@
 
 Children of two (referenced relatively to current directory):
 {% for child in node("dir2").children %}
-  - {{ child }}
+  - {{ child.url }}
 {% endfor %}
 
