@@ -13,7 +13,6 @@ from jinja2 import Environment
 from jinja2 import FileSystemLoader
 
 from spekulatio.logs import log
-from spekulatio.logs import log_obj
 from spekulatio.paths import templates_path
 from spekulatio.exceptions import SpekulatioInputError
 from .action import Action
@@ -24,7 +23,6 @@ class Node:
 
     name: str
     _layers: list["Layer"] = field(default_factory=list)
-    _values: list[dict[Any, Any]] = field(default_factory=list)
     _actions: list[Action] = field(default_factory=list)
     _children: dict[str, "Node"] = field(default_factory=dict)
 
@@ -36,17 +34,13 @@ class Node:
 
     @cached_property
     def raw_values(self) -> list[dict[Any, Any]]:
-        """Collect raw values from layers.
-
-        Raw values will be cached in `_raw_values`.
-        """
-        if self._values:
-            return self._values
-
+        """Collect raw values from layers."""
+        raw_values = []
         for layer, action in zip(self._layers, self._actions):
             values = action.get_values(layer.path / self.input_file_path)
-            self._values.append(values)
-        return self._values
+            extra_values = action.get_extra_values(layer.path / self.input_file_path)
+            raw_values.append((values, extra_values))
+        return raw_values
 
     @cached_property
     def layer_values(self) -> list[dict[Any, Any]]:
@@ -81,8 +75,9 @@ class Node:
         effective_values.update(post_inherited_defaults)
 
         # apply patches in order: first layers first
-        for layer_raw_values in self.raw_values:
-            effective_values = patch_dictionary(effective_values, layer_raw_values)
+        for raw_values, raw_extra_values in self.raw_values:
+            effective_values = patch_dictionary(effective_values, raw_values)
+            effective_values = patch_dictionary(effective_values, raw_extra_values)
 
         # add output special values
         effective_values["_root"] = self.root

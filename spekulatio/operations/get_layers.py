@@ -1,24 +1,24 @@
 import yaml
-import typing
+from typing import Optional
 from pathlib import Path
 
 from schema import And
 from schema import Schema
-from schema import Optional
 
 from spekulatio.logs import log
 from spekulatio.models import Layer
 from spekulatio.paths import default_layers_path
-from spekulatio.lib.paths import to_relative_path
 from spekulatio.exceptions import SpekulatioInputError
-from spekulatio.exceptions import SpekulatioInputError
+
 
 SPEKULATIO_FILE = "spekulatio.yaml"
 
 def get_layers(
     input_path: Path,
-    base_path: typing.Optional[Path] = None,
-    all_paths: typing.Optional[set[Layer]] = None,
+    values_file: str = "_values.yaml",
+    extra_values_file: Optional[str] = None,
+    base_path: Optional[Path] = None,
+    all_paths: Optional[set[Layer]] = None,
 ) -> list[Layer]:
     """Get list of layers defined in a Spekulatio configuration file.
 
@@ -95,13 +95,13 @@ def get_layers(
             )
 
         # get all layers from this spekulatio file
-        linked_layers = get_layers(input_path, base_path, all_paths)
+        linked_layers = get_layers(input_path, values_file, extra_values_file, base_path, all_paths)
         layers.extend(linked_layers)
 
     # get main layer
     if data:
         path_prefix = spekulatio_file_path.parent
-        main_layer = Layer.from_dict(spekulatio_file_path, data, path_prefix)
+        main_layer = Layer.from_dict(spekulatio_file_path, values_file, extra_values_file, data, path_prefix)
         layers.append(main_layer)
 
     return layers

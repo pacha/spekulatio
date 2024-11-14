@@ -1,31 +1,43 @@
+from typing import Any
+from typing import Optional
+from pathlib import Path
 from dataclasses import field
 from dataclasses import dataclass
-from typing import Any
-from pathlib import Path
 
 from schema import And
 from schema import Schema
-from schema import Optional
+from schema import Optional as OptionalField
 
 from spekulatio.logs import log
 from spekulatio.exceptions import SpekulatioInputError
 from .node import Node
 from .action import Action
-from .actions import create_dir_action
+from .actions import CreateDir
 
 
 @dataclass
 class Layer:
     spekulatio_file_path: Path
-    path: Path
-    values_file: str = "_values.yaml"
+    path: Optional[Path]
+    values_file: str
+    extra_values_file: Optional[str]
     actions: list[Action] = field(default_factory=list)
     values: dict[Any, Any] = field(default_factory=dict)
+    create_dir_action: CreateDir = field(init=False)
+
+    def __post_init__(self):
+        parameters = {
+            "values_file": self.values_file,
+            "extra_values_file": self.extra_values_file,
+        }
+        self.create_dir_action = CreateDir(parameters=parameters)
 
     @classmethod
     def from_dict(
         cls,
         spekulatio_file_path: Path,
+        values_file: str,
+        extra_values_file: str,
         data: dict,
         path_prefix: Path = Path("."),
     ):
@@ -33,14 +45,13 @@ class Layer:
         try:
             schema = Schema(
                 {
-                    Optional("path"): And(
+                    OptionalField("path"): And(
                         str, len, error="'path' should be a non-empty string."
                     ),
-                    Optional("values_file"): And(
-                        str, len, error="'values_file' should be a non-empty string."
+                    OptionalField("actions"): And(
+                        list, error="'actions' should be a list."
                     ),
-                    Optional("actions"): And(list, error="'actions' should be a list."),
-                    Optional("values"): And(
+                    OptionalField("values"): And(
                         dict, error="'values' should be a dictionary."
                     ),
                 }
@@ -54,9 +65,7 @@ class Layer:
             try:
                 init_data["path"] = path_prefix / Path(init_data["path"])
             except Exception as err:
-                raise SpekulatioInputError(
-                    f"Invalid path '{init_data['path']}': {err}"
-                )
+                raise SpekulatioInputError(f"Invalid path '{init_data['path']}': {err}")
             if not init_data["path"].exists():
                 raise SpekulatioInputError(
                     f"Can't find layer path '{init_data['path']}'"
@@ -66,7 +75,14 @@ class Layer:
                     f"Layer path '{init_data['path']}' must be a directory"
                 )
         else:
-            init_data["path"] = path_prefix / Path(".")
+            # only values can be specified without a path
+            extra_keys = set(init_data.keys()) - {"values"}
+            if extra_keys:
+                extra_keys_str = ",".join([f"'{key}'" for key in extra_keys])
+                raise SpekulatioInputError(
+                    f"{extra_keys_str} are specified in the layer configuration "
+                    "but 'path' is missing."
+                )
 
         if "actions" in init_data:
             actions = []
@@ -76,15 +92,22 @@ class Layer:
                     actions.append(action)
                 init_data["actions"] = actions
             except Exception as err:
-                raise SpekulatioInputError(f"Invalid action at '{spekulatio_file_path}': {err}")
+                raise SpekulatioInputError(
+                    f"Invalid action at '{spekulatio_file_path}': {err}"
+                )
 
-        return cls(spekulatio_file_path=spekulatio_file_path, **init_data)
+        return cls(
+            spekulatio_file_path=spekulatio_file_path,
+            values_file=values_file,
+            extra_values_file=extra_values_file,
+            **init_data,
+        )
 
     def get_action(self, path: Path) -> Action:
         """Return action for a given path or None if none matches."""
         if path.is_dir():
-            return create_dir_action
-        elif path.name == self.values_file:
+            return self.create_dir_action
+        elif path.name in (self.values_file, self.extra_values_file):
             return None
         elif path.resolve() == self.spekulatio_file_path:
             return None
@@ -101,10 +124,10 @@ class Layer:
 
         # add layer to root
         root._layers.append(self)
-        root._actions.append(create_dir_action)
+        root._actions.append(self.create_dir_action)
 
         # insert or update files and directories from layer
-        if self.actions:
+        if self.path and self.actions:
             self.apply_to_rec(node=root, path=self.path)
 
     def apply_to_rec(self, node: Node, path: Path):
@@ -120,6 +143,8 @@ class Layer:
                     )
                 except Exception as err:
                     log.exception(f"- {child_node}: {err}")
-                log.debug(f"- {child_node} [{str(child_node.action.__class__.__name__)}]")
+                log.debug(
+                    f"- {child_node} [{str(child_node.action.__class__.__name__)}]"
+                )
                 if child_path.is_dir():
                     self.apply_to_rec(node=child_node, path=child_path)

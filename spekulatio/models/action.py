@@ -117,6 +117,10 @@ class Action:
         """Don't return anything by default."""
         return {}
 
+    def get_extra_values(self, input_path: Path) -> dict[Any, Any]:
+        """Don't return anything by default."""
+        return {}
+
     def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
         """Execute the action.
 

@@ -2,4 +2,7 @@ path: .
 actions:
   - name: Render
     patterns:
-      - "*.md"
+      - "*.yaml"
+values:
+  numbers:
+    - 1

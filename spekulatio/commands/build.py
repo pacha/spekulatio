@@ -11,11 +11,10 @@ from spekulatio.operations import build as build_operation
 
 @click.command()
 @click.option(
-    "-c",
-    "--config",
-    "config_location",
+    "-s",
+    "spekulatio_file",
     default="./spekulatio.yaml",
-    help="Configuration file to use.",
+    help="Spekulatio file to read.",
 )
 @click.option(
     "-o",
@@ -25,13 +24,23 @@ from spekulatio.operations import build as build_operation
     help="Output directory.",
 )
 @click.option(
-    "-o",
-    "--output",
-    "output_location",
-    required=True,
-    help="Output directory.",
+    "-V",
+    "--values-file",
+    "values_file",
+    required=False,
+    default="_values.yaml",
+    help="Name of the values file to read in each directory.",
 )
 @click.option(
+    "-E",
+    "--extra-values-file",
+    "extra_values_file",
+    required=False,
+    default=None,
+    help="Name of the extra values file to read in each directory.",
+)
+@click.option(
+    "-c",
     "--cache",
     "cache",
     is_flag=True,
@@ -48,8 +57,10 @@ from spekulatio.operations import build as build_operation
     "-vv", "--very-verbose", default=False, is_flag=True, help="Show debug information."
 )
 def build(
-    config_location,
+    spekulatio_file,
     output_location,
+    values_file,
+    extra_values_file,
     cache,
     verbose,
     very_verbose,
@@ -67,7 +78,7 @@ def build(
     log.debug(f"Log level: {logging.getLevelName(log_level)}")
 
     log.debug("Building...")
-    config_path = Path(config_location)
+    spekulatio_file_path = Path(spekulatio_file)
     output_path = Path(output_location)
-    build_operation(config_path, output_path, cache=cache)
+    build_operation(spekulatio_file_path, output_path, values_file, extra_values_file, cache=cache)
     log.debug("Done.")
