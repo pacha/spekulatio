@@ -1,9 +1,9 @@
-
 import pytest
 
 from spekulatio.operations import get_layers
 from spekulatio.operations import create_tree
 from spekulatio.exceptions import SpekulatioInputError
+
 
 def test_traversing_with_get(fixtures_path):
     layers = get_layers(fixtures_path / "traversing")
@@ -37,6 +37,7 @@ def test_traversing_with_get(fixtures_path):
     assert dir2.get("/dir1").name == "dir1"
     assert dir2.get("/dir1/dir2").name == "dir2"
 
+
 def test_traversing_with_truediv(fixtures_path):
     layers = get_layers(fixtures_path / "traversing")
     root = create_tree(layers)
@@ -69,6 +70,7 @@ def test_traversing_with_truediv(fixtures_path):
     assert (dir2 / "dir3/file.md").name == "file.md"
     assert (dir2 / "/dir1").name == "dir1"
     assert (dir2 / "/dir1/dir2").name == "dir2"
+
 
 def test_fail_traversing(fixtures_path):
     layers = get_layers(fixtures_path / "traversing")

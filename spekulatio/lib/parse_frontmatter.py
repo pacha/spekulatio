@@ -1,4 +1,3 @@
-
 import re
 import yaml
 
@@ -7,6 +6,7 @@ from spekulatio.exceptions import SpekulatioInputError
 FRONTMATTER_PATTERN = re.compile(
     r"^---\s*?^(.*?)^---\s*?^(.*)", re.MULTILINE | re.DOTALL
 )
+
 
 def parse_frontmatter(text: str):
     """Extract YAML frontmatter data from text.

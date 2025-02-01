@@ -361,8 +361,8 @@ differentiate them from your own variables and avoid conflicts.
 
 These are some of the most useful ones:
 
-* `_foo`: 
-* `_bar`: 
+* `_foo`:
+* `_bar`:
 * ...
 
 Note that some of them are just to be read, but others can also be set. When a
@@ -407,7 +407,7 @@ retro-games-output/
 Note that the `templates/` directory is not included in the final result.
 Spekulatio doesn't generate empty directories in the output. Since `templates/`
 only contains a file that doesn't produce any output, the entire directory is
-skipped. If you want to keep a empty directory in the output, just 
+skipped. If you want to keep a empty directory in the output, just
 add an empty file named `.spekulatiokeep` in the input.
 
 This is how the file contents could look like in the example above:
@@ -792,4 +792,3 @@ This package also includes a collection of templates that can be used to
 generate websites quickly with Spekulatio.
 
 To learn more check [LINK: spekulatio extra]
-

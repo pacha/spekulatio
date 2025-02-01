@@ -1,8 +1,7 @@
-
 from spekulatio.operations import build
 
-def test_action_render(fixtures_path, output_path):
 
+def test_action_render(fixtures_path, output_path):
     # generate ouput
     build(fixtures_path / "action-render", output_path)
 

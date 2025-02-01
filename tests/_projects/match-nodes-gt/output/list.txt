@@ -6,4 +6,3 @@ Nodes with "number" greater than 2:
   - /dir1/baz.html
 
   - /dir1/dir2/bam.html
-

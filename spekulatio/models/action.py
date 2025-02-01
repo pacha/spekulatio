@@ -1,6 +1,7 @@
 import importlib
 from typing import Any
 from typing import Optional
+from typing import Callable
 from pathlib import Path
 from dataclasses import field
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ from schema import Optional as OptionalField
 from jinja2 import Template
 from py_walk import get_parser_from_list
 from py_walk.models.parser import Parser
+from py_dictfind import get_checker
 
 from spekulatio.logs import log
 from spekulatio.exceptions import SpekulatioInputError
@@ -23,9 +25,15 @@ class Action:
     output_name: Optional[str] = "{{ _input_name }}"
     parameters: dict[str, Any] = field(default_factory=dict)
     parser: Parser = field(init=False)
+    condition: Optional[str] = None
+    condition_checker: Optional[Callable] = field(init=False)
 
     def __post_init__(self):
         self.parser = get_parser_from_list(self.patterns)
+        if self.condition:
+            self.condition_checker = get_checker(self.condition)
+        else:
+            self.condition_checker = lambda _: True
 
     @classmethod
     @property
@@ -40,14 +48,27 @@ class Action:
             schema = Schema(
                 {
                     "name": And(str, error="'name' should be a string."),
-                    OptionalField("package", default="spekulatio"): And(str, error="'package' should be a string."),
-                    OptionalField("patterns"): And([str], error="'patterns' should be a list of strings."),
-                    OptionalField("output_name"): And(str, error="'output_name' should be a string."),
-                    OptionalField("frontmatter"): And(bool, error="'frontmatter' should be true or false."),
-                    OptionalField("render_content"): And(bool, error="'render_content' should be true or false."),
+                    OptionalField("package", default="spekulatio"): And(
+                        str, error="'package' should be a string."
+                    ),
+                    OptionalField("patterns"): And(
+                        [str], error="'patterns' should be a list of strings."
+                    ),
+                    OptionalField("output_name"): And(
+                        str, error="'output_name' should be a string."
+                    ),
+                    OptionalField("frontmatter"): And(
+                        bool, error="'frontmatter' should be true or false."
+                    ),
+                    OptionalField("render_content"): And(
+                        bool, error="'render_content' should be true or false."
+                    ),
                     OptionalField("parameters"): And(
                         {str: object},
                         error="'parameters' should be a dictionary with string keys.",
+                    ),
+                    OptionalField("condition"): And(
+                        str, error="'condition' should be a string."
                     ),
                 }
             )
@@ -121,7 +142,9 @@ class Action:
         """Don't return anything by default."""
         return {}
 
-    def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
+    def execute(
+        self, input_path: Path, output_path: Path, values: dict[Any, Any]
+    ) -> None:
         """Execute the action.
 
         To be overloaded by the specific Action sub-classes.
@@ -133,6 +156,7 @@ class Action:
 
     def __str__(self):
         return self.name
+
 
 @dataclass
 class RenderFromTextAction(Action):
@@ -155,6 +179,7 @@ class RenderFromTextAction(Action):
         values.update(frontmatter_values)
         return values
 
+
 @dataclass
 class RenderFromDataAction(Action):
     output_name: Optional[str] = None
@@ -164,10 +189,14 @@ class RenderFromDataAction(Action):
         if "_output_name" not in values:
             template_name = values["_template"]
             template_path = Path(template_name)
-            values["_output_name"] = f"{{{{ _input_name.with_suffix('{template_path.suffix}') }}}}"
+            values["_output_name"] = (
+                f"{{{{ _input_name.with_suffix('{template_path.suffix}') }}}}"
+            )
         return super().get_output_name(values)
 
-    def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
+    def execute(
+        self, input_path: Path, output_path: Path, values: dict[Any, Any]
+    ) -> None:
         """Render template by passing all values."""
 
         # get values

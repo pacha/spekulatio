@@ -9,4 +9,3 @@ Genres:
 {% for genre in genres -%}
     - {{ genre }}
 {% endfor %}
-

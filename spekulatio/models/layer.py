@@ -12,6 +12,7 @@ from spekulatio.logs import log
 from spekulatio.exceptions import SpekulatioInputError
 from .node import Node
 from .action import Action
+from .actions import Ignore
 from .actions import CreateDir
 
 
@@ -135,6 +136,11 @@ class Layer:
         for child_path in path.iterdir():
             action = self.get_action(child_path)
             if action:
+                if isinstance(action, Ignore):
+                    log.debug(
+                        f"- {child_path} [Ignore]"
+                    )
+                    continue
                 try:
                     child_node = node.upsert_child(
                         name=child_path.name,

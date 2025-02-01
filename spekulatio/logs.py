@@ -1,4 +1,3 @@
-
 import pprint
 import logging
 import textwrap
@@ -10,6 +9,7 @@ from rich.logging import RichHandler
 log = logging.getLogger("spekulatio")
 log.addHandler(logging.NullHandler())
 
+
 def configure_logging(level):
     error_console = Console(stderr=True)
     logging.basicConfig(
@@ -18,6 +18,7 @@ def configure_logging(level):
         handlers=[RichHandler(console=error_console, show_time=False, show_path=False)],
     )
     log.setLevel(level)
+
 
 def log_obj(level: str, message: str, obj_retriever: Any, indent=0):
     """Log a complex object, pretty printed and without affecting performance.
@@ -37,6 +38,6 @@ def log_obj(level: str, message: str, obj_retriever: Any, indent=0):
     if log.isEnabledFor(level):
         obj = obj_retriever()
         obj_message = pprint.pformat(obj)
-        obj_message = textwrap.indent(obj_message, indent * ' ')
+        obj_message = textwrap.indent(obj_message, indent * " ")
         full_message = f"{message}\n{obj_message}"
         log.log(level, full_message)

@@ -1,4 +1,3 @@
-
 import logging
 
 import click
@@ -12,6 +11,7 @@ from spekulatio.logs import log
 from spekulatio.exceptions import SpekulatioInputError
 from spekulatio.exceptions import SpekulatioInternalError
 
+
 class CustomGroup(click.Group):
     def invoke(self, ctx):
         try:
@@ -24,6 +24,7 @@ class CustomGroup(click.Group):
                 log.exception(f"An unexpected error occurred: {err}")
             else:
                 log.error(f"An unexpected error occurred: {err}")
+
 
 @click.group(cls=CustomGroup, context_settings={"show_default": True})
 def spekulatio():

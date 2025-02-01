@@ -1,4 +1,3 @@
-
 from typing import Any
 from pathlib import Path
 from dataclasses import dataclass
@@ -11,9 +10,17 @@ from jinja2 import Template
 from spekulatio.exceptions import SpekulatioInternalError
 from ..action import RenderFromTextAction
 
+
 @dataclass
 class Md2Html(RenderFromTextAction):
-    patterns: tuple[str] = ("*.md", "*.mkd", "*.mkdn", "*.mdwn", "*.mdwon", "*.markdown")
+    patterns: tuple[str] = (
+        "*.md",
+        "*.mkd",
+        "*.mkdn",
+        "*.mdwn",
+        "*.mdwon",
+        "*.markdown",
+    )
     output_name: str = "{{ _input_name.with_suffix('.html') }}"
     frontmatter: bool = True
     render_content: bool = True
@@ -30,7 +37,9 @@ class Md2Html(RenderFromTextAction):
         )
         schema.validate(self.parameters)
 
-    def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
+    def execute(
+        self, input_path: Path, output_path: Path, values: dict[Any, Any]
+    ) -> None:
         """Render current file and write it to the output path."""
 
         # get source
@@ -56,7 +65,7 @@ class Md2Html(RenderFromTextAction):
         # update values
         values["_md"] = md
         values["_content"] = content
-        if hasattr(md, 'toc_tokens'):
+        if hasattr(md, "toc_tokens"):
             values["_toc"] = md.toc_tokens
 
         # get values

@@ -4,4 +4,3 @@ Children of two (referenced relatively to current directory):
   - /dir1/dir2/bar.html
 
   - /dir1/dir2/baz.html
-

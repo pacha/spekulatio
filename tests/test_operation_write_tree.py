@@ -4,8 +4,8 @@ from spekulatio.operations import get_layers
 from spekulatio.operations import create_tree
 from spekulatio.operations import write_tree
 
-def test_extra_values(fixtures_path, output_path):
 
+def test_extra_values(fixtures_path, output_path):
     # write output for the first time
     layers = get_layers(fixtures_path / "cache")
     root = create_tree(layers)

@@ -130,4 +130,3 @@ jobs:
       run: |
         gh release create '${{ needs.build.outputs.version }}' --repo '${{ github.repository }}' --title "${{ needs.build.outputs.version }}"
         gh release upload '${{ needs.build.outputs.version }}' dist/** --repo '${{ github.repository }}'
-

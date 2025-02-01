@@ -8,4 +8,3 @@ bar: 2
 # Foo
 
 text
-

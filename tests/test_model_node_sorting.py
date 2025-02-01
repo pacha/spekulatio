@@ -1,9 +1,9 @@
-
 import pytest
 
 from spekulatio.operations import get_layers
 from spekulatio.operations import create_tree
 from spekulatio.exceptions import SpekulatioInputError
+
 
 def test_sorting_default(fixtures_path):
     layers = get_layers(fixtures_path / "sorting-default")
@@ -43,6 +43,7 @@ def test_sorting_default(fixtures_path):
     assert root.next_sibling is None
     assert root.next is root / "dir1"
 
+
 def test_sorting_sink(fixtures_path):
     layers = get_layers(fixtures_path / "sorting-sink")
     root = create_tree(layers)
@@ -81,17 +82,32 @@ def test_sorting_sink(fixtures_path):
     assert root.next_sibling is None
     assert root.next is root / "dir1"
 
+
 def test_sorting_sink_top(fixtures_path):
     layers = get_layers(fixtures_path / "sorting-sink-top")
     root = create_tree(layers)
 
-    assert [child.name for child in root.get("dir1").children] == ["c.md", "d.md", "e.md", "b.md", "a.md"]
+    assert [child.name for child in root.get("dir1").children] == [
+        "c.md",
+        "d.md",
+        "e.md",
+        "b.md",
+        "a.md",
+    ]
+
 
 def test_sorting_sink_bottom(fixtures_path):
     layers = get_layers(fixtures_path / "sorting-sink-bottom")
     root = create_tree(layers)
 
-    assert [child.name for child in root.get("dir1").children] == ["b.md", "e.md", "a.md", "c.md", "d.md"]
+    assert [child.name for child in root.get("dir1").children] == [
+        "b.md",
+        "e.md",
+        "a.md",
+        "c.md",
+        "d.md",
+    ]
+
 
 def test_sorting_duplicate(fixtures_path):
     layers = get_layers(fixtures_path / "sorting-duplicate")
@@ -99,6 +115,7 @@ def test_sorting_duplicate(fixtures_path):
     root = create_tree(layers)
     with pytest.raises(SpekulatioInputError):
         _ = root.get("dir1").children
+
 
 def test_sorting_duplicate_sink(fixtures_path):
     layers = get_layers(fixtures_path / "sorting-duplicate-sink")

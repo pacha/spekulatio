@@ -1,8 +1,7 @@
-
 from spekulatio.operations import build
 
-def test_action_copy(fixtures_path, output_path):
 
+def test_action_copy(fixtures_path, output_path):
     # generate ouput
     build(fixtures_path / "action-copy", output_path)
 

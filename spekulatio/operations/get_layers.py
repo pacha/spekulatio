@@ -13,6 +13,7 @@ from spekulatio.exceptions import SpekulatioInputError
 
 SPEKULATIO_FILE = "spekulatio.yaml"
 
+
 def get_layers(
     input_path: Path,
     values_file: str = "_values.yaml",
@@ -57,9 +58,7 @@ def get_layers(
         text = spekulatio_file_path.read_text(encoding="utf-8")
         data = yaml.safe_load(text) or {}
     except Exception as err:
-        raise SpekulatioInputError(
-            f"Can't read configuration file: {err}"
-        )
+        raise SpekulatioInputError(f"Can't read configuration file: {err}")
 
     # get linked layer definitions
     layer_definitions = data.pop("layers", [])
@@ -77,7 +76,6 @@ def get_layers(
         }
     )
     for layer_definition in layer_definitions:
-
         # get path
         try:
             validated_data = schema.validate(layer_definition)
@@ -95,13 +93,17 @@ def get_layers(
             )
 
         # get all layers from this spekulatio file
-        linked_layers = get_layers(input_path, values_file, extra_values_file, base_path, all_paths)
+        linked_layers = get_layers(
+            input_path, values_file, extra_values_file, base_path, all_paths
+        )
         layers.extend(linked_layers)
 
     # get main layer
     if data:
         path_prefix = spekulatio_file_path.parent
-        main_layer = Layer.from_dict(spekulatio_file_path, values_file, extra_values_file, data, path_prefix)
+        main_layer = Layer.from_dict(
+            spekulatio_file_path, values_file, extra_values_file, data, path_prefix
+        )
         layers.append(main_layer)
 
     return layers

@@ -18,7 +18,11 @@ def build(
     """Build project from a spekulation configuration file."""
 
     log.debug("Reading layer configuration...")
-    layers = get_layers(spekulatio_file_path, values_file=values_file, extra_values_file=extra_values_file)
+    layers = get_layers(
+        spekulatio_file_path,
+        values_file=values_file,
+        extra_values_file=extra_values_file,
+    )
 
     log.debug("Creating in-memory tree...")
     root = create_tree(layers)

@@ -1,4 +1,3 @@
-
 import json
 
 from typing import Any
@@ -8,6 +7,7 @@ from dataclasses import dataclass
 from spekulatio.logs import log
 
 from ..action import RenderFromDataAction
+
 
 @dataclass
 class RenderJson(RenderFromDataAction):

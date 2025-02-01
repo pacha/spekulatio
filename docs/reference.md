@@ -1,6 +1,22 @@
 
 # Reference
 
+
+## build command
+
+Examples:
+
+    spekulatio build py-project -o some/folder
+    spekulatio build py-project --output some/folder
+
+    spekulatio build . --output some/folder
+
+    spekulatio build website --input . --output output/folder
+    spekulatio build website --input input/folder --output output/folder
+
+    spekulatio build yaml-manifests --input input/folder --output output/folder -v "foo: 3"
+    spekulatio build yaml-manifests --input input/folder --output output/folder -f some-values.yaml
+
 ## spekulatio.yaml file
 
 Example displaying all fields:
@@ -33,8 +49,8 @@ the same path. The processing of the parent Spekulatio file has higher priority
 than any of the layers (exactly as if it were the last layer applied).
 
 A `spekulatio.yaml` file can be composed of a single `layers` entry with the
-list of child Spekulatio files to process. It is not mandatory to have a
-`rules` entry.
+list of child Spekulatio files to process. It is not mandatory to provide
+`path` and `actions` entries in the file.
 
 For each layer:
 
@@ -222,4 +238,3 @@ If placed inside a front-matter, the corresponding output file is renamed
 accordingly. If placed inside a `_values.yaml` file, it is the output directory
 associated to the containing directory the one named according to the template
 provided.
-

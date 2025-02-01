@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 import click
@@ -29,4 +28,4 @@ def serve(directory, port):
 
     directory_path = Path(directory)
     app = create_file_serving_app(directory_path)
-    run_simple('localhost', port, app, threaded=True)
+    run_simple("localhost", port, app, threaded=True)

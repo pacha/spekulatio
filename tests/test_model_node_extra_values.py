@@ -4,11 +4,12 @@ from spekulatio.operations import get_layers
 from spekulatio.operations import create_tree
 from spekulatio.operations import write_tree
 
+
 def test_extra_values(fixtures_path, output_path):
     layers = get_layers(
         fixtures_path / "extra-values",
         values_file="_vals.yaml",
-        extra_values_file="_vals.extra.yaml"
+        extra_values_file="_vals.extra.yaml",
     )
     root = create_tree(layers)
     write_tree(output_path, root, cache=False)

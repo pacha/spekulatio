@@ -1,4 +1,3 @@
-
 from filecmp import dircmp
 
 from spekulatio.logs import log
@@ -14,7 +13,9 @@ def compare_output(generated_output_path, expected_output_path) -> list:
         for name in result.diff_files:
             diff.append(f"Not matching: {name}")
         for name in result.left_only:
-            diff.append(f"Only in generated output {generated_output_path.name}: {name}")
+            diff.append(
+                f"Only in generated output {generated_output_path.name}: {name}"
+            )
         for name in result.right_only:
             diff.append(f"Only in expected output {expected_output_path.name}: {name}")
         for subdir_result in result.subdirs.values():
@@ -25,6 +26,7 @@ def compare_output(generated_output_path, expected_output_path) -> list:
     result = dircmp(generated_output_path, expected_output_path)
     diff = process_result(result)
     return diff
+
 
 def test_project(project_path, output_path):
     """Test complete build of a project."""

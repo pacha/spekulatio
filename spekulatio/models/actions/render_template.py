@@ -1,4 +1,3 @@
-
 from typing import Any
 from pathlib import Path
 from dataclasses import dataclass
@@ -7,6 +6,7 @@ from jinja2 import Template
 
 from spekulatio.exceptions import SpekulatioInternalError
 from ..action import RenderFromTextAction
+
 
 @dataclass
 class RenderTemplate(RenderFromTextAction):
@@ -19,10 +19,14 @@ class RenderTemplate(RenderFromTextAction):
         if "_output_name" not in values:
             template_name = values["_template"]
             template_path = Path(template_name)
-            values["_output_name"] = f"{{{{ _input_name.with_suffix('{template_path.suffix}') }}}}"
+            values["_output_name"] = (
+                f"{{{{ _input_name.with_suffix('{template_path.suffix}') }}}}"
+            )
         return super().get_output_name(values)
 
-    def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
+    def execute(
+        self, input_path: Path, output_path: Path, values: dict[Any, Any]
+    ) -> None:
         """Write file to the output path."""
         # get source
         try:

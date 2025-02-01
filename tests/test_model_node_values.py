@@ -1,6 +1,6 @@
-
 from spekulatio.operations import get_layers
 from spekulatio.operations import create_tree
+
 
 def test_default_values(fixtures_path):
     layers = get_layers(fixtures_path / "values-default")
@@ -26,6 +26,7 @@ def test_default_values(fixtures_path):
     assert root.get("dir1/dir3/foo.md").values["_template"] == "spekulatio/default.html"
     assert root.get("dir1/dir3/foo.md").values["_sort"] == ["*"]
 
+
 def test_values_frontmatter(fixtures_path):
     layers = get_layers(fixtures_path / "values-frontmatter")
     root = create_tree(layers)
@@ -33,12 +34,14 @@ def test_values_frontmatter(fixtures_path):
     node = root / "foo.md"
     assert node.user_values == {"foo": 1, "bar": 2}
 
+
 def test_values_directory(fixtures_path):
     layers = get_layers(fixtures_path / "values-directory")
     root = create_tree(layers)
 
     node = root / "foo"
     assert node.user_values == {"foo": 1, "bar": 2}
+
 
 def test_values_inheritance(fixtures_path):
     layers = get_layers(fixtures_path / "values-inheritance")
@@ -68,4 +71,3 @@ def test_values_inheritance(fixtures_path):
     assert root.get("dir4").values["f"] == 7
     assert root.get("dir1").values["g"] == 8
     assert root.get("dir4").values["g"] == 8
-

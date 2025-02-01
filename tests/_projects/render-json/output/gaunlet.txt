@@ -8,4 +8,3 @@ Publisher: Atari Games
 Genres:
 - Multiplayer
 - Dungeon crawl
-

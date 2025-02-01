@@ -1,4 +1,3 @@
-
 from typing import Any
 from pathlib import Path
 from dataclasses import dataclass
@@ -8,12 +7,15 @@ from jinja2 import Template
 from spekulatio.exceptions import SpekulatioInternalError
 from ..action import RenderFromTextAction
 
+
 @dataclass
 class Render(RenderFromTextAction):
     frontmatter: bool = True
     render_content: bool = True
 
-    def execute(self, input_path: Path, output_path: Path, values: dict[Any, Any]) -> None:
+    def execute(
+        self, input_path: Path, output_path: Path, values: dict[Any, Any]
+    ) -> None:
         """Write file to the output path."""
         # get source
         try:

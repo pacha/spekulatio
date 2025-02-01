@@ -1,7 +1,7 @@
-
 from pathlib import Path
 
 from spekulatio.models import Node
+
 
 def write_tree(output_path: Path, root: Node, cache: bool) -> None:
     """Generate the output file structure from an in-memory tree."""

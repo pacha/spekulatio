@@ -1,4 +1,3 @@
-
 from werkzeug.utils import redirect
 from werkzeug.utils import send_file
 from werkzeug.wrappers import Request
@@ -17,13 +16,16 @@ def create_file_serving_app(directory):
     """
 
     def get_response(request):
-
         filepath = directory / request.path[1:]
-        trailing_slash = request.path.endswith('/')
+        trailing_slash = request.path.endswith("/")
 
         if filepath.is_file():
             if trailing_slash:
-                new_path = request.path[:-6] if request.path.endswith(".html/") else request.path[:-1]
+                new_path = (
+                    request.path[:-6]
+                    if request.path.endswith(".html/")
+                    else request.path[:-1]
+                )
                 return redirect(new_path, 302)
             else:
                 return send_file(filepath, request.environ)
@@ -38,7 +40,9 @@ def create_file_serving_app(directory):
 
         if trailing_slash:
             slashless_filepath = directory / request.path[1:-1]
-            html_filepath = slashless_filepath.with_name(f"{slashless_filepath.name}.html")
+            html_filepath = slashless_filepath.with_name(
+                f"{slashless_filepath.name}.html"
+            )
             if slashless_filepath.is_file() or html_filepath.is_file():
                 return redirect(request.path[:-1], 302)
         else:
@@ -53,9 +57,9 @@ def create_file_serving_app(directory):
         response = get_response(request)
 
         # use only etag for catching
-        response.headers['Cache-Control'] = 'no-cache, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
 
         return response(environ, start_response)
 

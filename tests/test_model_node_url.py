@@ -1,6 +1,6 @@
-
 from spekulatio.operations import get_layers
 from spekulatio.operations import create_tree
+
 
 def test_url(fixtures_path):
     layers = get_layers(fixtures_path / "traversing")

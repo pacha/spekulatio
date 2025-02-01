@@ -1,7 +1,7 @@
-
 from pathlib import Path
 from typing import Any
 from typing import Optional
+
 from typing import Callable
 from dataclasses import field
 from dataclasses import dataclass
@@ -20,7 +20,6 @@ from .action import Action
 
 @dataclass
 class Node:
-
     name: str
     _layers: list["Layer"] = field(default_factory=list)
     _actions: list[Action] = field(default_factory=list)
@@ -74,6 +73,11 @@ class Node:
         effective_values.update(self.inherited_values)
         effective_values.update(post_inherited_defaults)
 
+        try:
+            del effective_values["_output_name"]
+        except Exception:
+            pass
+
         # apply patches in order: first layers first
         for raw_values, raw_extra_values in self.raw_values:
             effective_values = patch_dictionary(effective_values, raw_values)
@@ -91,7 +95,9 @@ class Node:
     @cached_property
     def user_values(self):
         """Return only user values (ie. values without leading underscore)."""
-        return {key: value for key, value in self.values.items() if not key.startswith("_")}
+        return {
+            key: value for key, value in self.values.items() if not key.startswith("_")
+        }
 
     @cached_property
     def input_name(self):
@@ -131,14 +137,14 @@ class Node:
                 except Exception:
                     pass
 
-        environment.filters['with_value'] = with_value
-        environment.filters['without_value'] = without_value
-        environment.filters['value_eq'] = partial(filter_nodes, operation_name="__eq__")
-        environment.filters['value_ne'] = partial(filter_nodes, operation_name="__ne__")
-        environment.filters['value_gt'] = partial(filter_nodes, operation_name="__gt__")
-        environment.filters['value_lt'] = partial(filter_nodes, operation_name="__lt__")
-        environment.filters['value_ge'] = partial(filter_nodes, operation_name="__ge__")
-        environment.filters['value_le'] = partial(filter_nodes, operation_name="__le__")
+        environment.filters["with_value"] = with_value
+        environment.filters["without_value"] = without_value
+        environment.filters["value_eq"] = partial(filter_nodes, operation_name="__eq__")
+        environment.filters["value_ne"] = partial(filter_nodes, operation_name="__ne__")
+        environment.filters["value_gt"] = partial(filter_nodes, operation_name="__gt__")
+        environment.filters["value_lt"] = partial(filter_nodes, operation_name="__lt__")
+        environment.filters["value_ge"] = partial(filter_nodes, operation_name="__ge__")
+        environment.filters["value_le"] = partial(filter_nodes, operation_name="__le__")
         return environment
 
     @cached_property
@@ -326,15 +332,15 @@ class Node:
         If the path is absolute (eg. /foo/bar.md), the node is searched from
         the root.
         """
-        if not path_segments or path_segments == ('',):
+        if not path_segments or path_segments == ("",):
             return self
 
         first_segment, tail_segments = path_segments[0], path_segments[1:]
-        is_absolute_path = first_segment.startswith('/')
+        is_absolute_path = first_segment.startswith("/")
         if is_absolute_path:
             return self.root.get(first_segment[1:], *tail_segments)
 
-        parts = first_segment.split('/')
+        parts = first_segment.split("/")
         first_part, tail_parts = parts[0], parts[1:]
         try:
             child = self._children[first_part]
@@ -367,7 +373,7 @@ class Node:
         """Remove branches that don't end in a file."""
         # convert to list so that the dictionary can be modified in-place
         children = list(self._children.items())
-        for name, child in children:  # convert to list since the dictionary is
+        for name, child in children:
             child.prune()
             if not child._children and child.is_dir:
                 del self._children[name]
@@ -432,7 +438,7 @@ class Node:
 
         # sort all names
         top_names = sorted_names[:sink_position]
-        bottom_names = sorted_names[(sink_position + 1):]
+        bottom_names = sorted_names[(sink_position + 1) :]
         missing_names = all_names - named_names
         all_sorted_names = top_names + sorted(missing_names) + bottom_names
 
@@ -473,9 +479,7 @@ class Node:
         log.info(f"- {self} [{self.action.__class__.__name__}]")
         try:
             self.action.execute(
-                input_path=input_path,
-                output_path=output_path,
-                values=self.values
+                input_path=input_path, output_path=output_path, values=self.values
             )
         except Exception as err:
             raise Exception(f"--- {self}: {err}") from err
