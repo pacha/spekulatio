@@ -6,6 +6,7 @@ from pathlib import Path
 from dataclasses import dataclass
 
 from spekulatio.logs import log
+from spekulatio.exceptions import SpekulatioInputError
 
 from ..action import Action
 
@@ -24,7 +25,10 @@ class RenderYaml(Action):
         if self.output_name:
             new_output_name = self.output_name
         else:
-            template_name = values["_template"]
+            try:
+                template_name = values["_template"]
+            except KeyError:
+                raise SpekulatioInputError(f"Action '{self}' can't be used if the value _template is not defined")
             template_path = Path(template_name)
             template_suffix = template_path.suffix
             new_output_name = f"{{{{ _input_path.with_suffix('{template_suffix}').name }}}}"
@@ -36,7 +40,10 @@ class RenderYaml(Action):
         """Render template by passing all values."""
 
         # render template
-        template_name = values["_template"]
+        try:
+            template_name = values["_template"]
+        except KeyError:
+            raise SpekulatioInputError(f"Action '{self}' can't be used if the value _template is not defined")
         template = env.get_template(template_name)
         rendered_content = template.render(values)
 

@@ -5,7 +5,9 @@ from dataclasses import dataclass
 
 from jinja2 import Template
 
+from spekulatio.exceptions import SpekulatioInputError
 from spekulatio.exceptions import SpekulatioInternalError
+from spekulatio.lib.parse_values import parse_values_from_frontmatter
 from ..action import Action
 
 
@@ -55,7 +57,10 @@ class RenderTemplate(Action):
         values["_action"]["content"] = content
 
         # render template
-        template_name = values["_template"]
+        try:
+            template_name = values["_template"]
+        except KeyError:
+            raise SpekulatioInputError(f"Action '{self}' can't be used if the value _template is not defined")
         template = env.get_template(template_name)
         rendered_content = template.render(values)
 

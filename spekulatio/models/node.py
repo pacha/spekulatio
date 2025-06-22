@@ -12,6 +12,7 @@ from py_dictfind import check
 
 from spekulatio.logs import log
 from spekulatio.exceptions import SpekulatioInputError
+from spekulatio.exceptions import SpekulatioInternalError
 from .layer import Layer
 
 @dataclass
@@ -47,15 +48,24 @@ class Node:
 
     @property
     def recipe(self):
-        return self.layers[-1].recipe
+        try:
+            return self.layers[-1].recipe
+        except IndexError:
+            raise SpekulatioInternalError("Unexpected error: access to a node without layers detected.")
 
     @property
     def action(self):
-        return self.layers[-1].action
+        try:
+            return self.layers[-1].action
+        except IndexError:
+            raise SpekulatioInternalError("Unexpected error: access to a node without layers detected.")
 
     @property
     def path(self):
-        return self.layers[-1].path
+        try:
+            return self.layers[-1].path
+        except IndexError:
+            raise SpekulatioInternalError("Unexpected error: access to a node without layers detected.")
 
     ## input
 
@@ -305,7 +315,7 @@ class Node:
         except KeyError:
             path_stem = self.input_path.stem
             with_spaces = path_stem.replace("-", " ").replace("_", " ")
-            result = words.title()
+            result = with_spaces.title()
             return result
 
     @cached_property

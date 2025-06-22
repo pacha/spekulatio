@@ -90,13 +90,12 @@ class Action:
             action.validate_parameters()
         except Exception as err:
             raise SpekulatioInputError(
-                f"Wrong set of parameters for action '{action.name}': {err}"
+                f"Wrong set of parameters for action '{action}': {err}"
             )
 
         return action
 
     @classmethod
-    @property
     def name(cls):
         return cls.__name__
 
@@ -145,5 +144,5 @@ class Action:
         return str(self)
 
     def __str__(self):
-        return self.name
+        return self.name()
 
