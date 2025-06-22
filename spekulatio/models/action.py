@@ -2,12 +2,14 @@ import importlib
 from typing import Any
 from typing import Optional
 from typing import Callable
+from typing import ClassVar
 from pathlib import Path
 from dataclasses import field
 from dataclasses import dataclass
 
 from schema import And
 from schema import Schema
+from schema import SchemaError
 from schema import Optional as OptionalField
 from jinja2 import Template
 from py_walk import get_parser_from_list
@@ -16,65 +18,56 @@ from py_dictfind import get_checker
 
 from spekulatio.logs import log
 from spekulatio.exceptions import SpekulatioInputError
-from spekulatio.lib.parse_values import parse_values_from_frontmatter
+from spekulatio.exceptions import SpekulatioValidationError
 
 
 @dataclass
 class Action:
     patterns: tuple[str] = field(default_factory=tuple)
-    output_name: Optional[str] = "{{ _input_name }}"
+    output_name: str = "{{ _input_path.name }}"
     parameters: dict[str, Any] = field(default_factory=dict)
-    parser: Parser = field(init=False)
     condition: Optional[str] = None
-    condition_checker: Optional[Callable] = field(init=False)
+    render_content: bool = False
+    parser: Parser = field(init=False)
+    check_condition: Optional[Callable] = field(init=False)
+    process_children: ClassVar[bool] = False
 
     def __post_init__(self):
         self.parser = get_parser_from_list(self.patterns)
-        if self.condition:
-            self.condition_checker = get_checker(self.condition)
-        else:
-            self.condition_checker = lambda _: True
-
-    @classmethod
-    @property
-    def name(cls):
-        return cls.__class__.__name__
+        self.check_condition = get_checker(self.condition) if self.condition else None
 
     @classmethod
     def from_dict(cls, data):
         """Create an instance object from a data dictionary."""
         # validate
+        schema = Schema(
+            {
+                "name": And(str, error="'name' should be a string."),
+                OptionalField("package", default="spekulatio"): And(
+                    str, error="'package' should be a string."
+                ),
+                OptionalField("patterns"): And(
+                    [str], error="'patterns' should be a list of strings."
+                ),
+                OptionalField("output_name"): And(
+                    str, error="'output_name' should be a string."
+                ),
+                OptionalField("parameters"): And(
+                    {str: object},
+                    error="'parameters' should be a dictionary with string keys.",
+                ),
+                OptionalField("condition"): And(
+                    str, error="'condition' should be a string."
+                ),
+                OptionalField("render_content"): And(
+                    bool, error="'render_content' should be a boolean value."
+                ),
+            }
+        )
         try:
-            schema = Schema(
-                {
-                    "name": And(str, error="'name' should be a string."),
-                    OptionalField("package", default="spekulatio"): And(
-                        str, error="'package' should be a string."
-                    ),
-                    OptionalField("patterns"): And(
-                        [str], error="'patterns' should be a list of strings."
-                    ),
-                    OptionalField("output_name"): And(
-                        str, error="'output_name' should be a string."
-                    ),
-                    OptionalField("frontmatter"): And(
-                        bool, error="'frontmatter' should be true or false."
-                    ),
-                    OptionalField("render_content"): And(
-                        bool, error="'render_content' should be true or false."
-                    ),
-                    OptionalField("parameters"): And(
-                        {str: object},
-                        error="'parameters' should be a dictionary with string keys.",
-                    ),
-                    OptionalField("condition"): And(
-                        str, error="'condition' should be a string."
-                    ),
-                }
-            )
             init_data = schema.validate(data)
-        except Exception as err:
-            raise SpekulatioInputError(f"Wrong configuration: {err}")
+        except SchemaError as err:
+            raise SpekulatioValidationError(err)
 
         # get suitable class
         try:
@@ -102,35 +95,36 @@ class Action:
 
         return action
 
-    def match(self, path: Path) -> bool:
+    @classmethod
+    @property
+    def name(cls):
+        return cls.__name__
+
+    def match(self, input_path: Path) -> bool:
         """Return if the provided path matches the patterns of the action."""
-        is_a_match = self.parser.match(path)
+        is_a_match = self.parser.match(input_path)
         return is_a_match
 
-    def get_output_name(self, values: dict[Any, Any]) -> str:
+    def get_output_name(self, values: dict[Any, Any], output_name: Optional[str] = None) -> str:
         """Return the output filename of the action."""
-
-        # get output name template
-        output_name = values.get("_output_name", self.output_name)
-        if not output_name:
-            raise SpekulatioInputError(
-                f"You need to set 'output_name' to use the '{self.__class__.__name__}' action."
-            )
-
-        # render template
-        template = Template(output_name)
+        output_name_template = values.get("_output_name") or output_name or self.output_name
+        template = Template(output_name_template)
         name = template.render(values)
         if not name:
             raise SpekulatioInputError(
                 "Wrong output name for node. The output name for a node can't be an empty string. "
-                f"(output name template: {output_name})."
+                f"(output name template: {output_name_template})."
             )
         return name
+
+    ## most common methods to override
 
     def validate_parameters(self):
         """Validate parameter names and types.
 
         To be overloaded by the specific Action sub-classes. No validation by default.
+
+        Raise ValueError to indicate
         """
         pass
 
@@ -138,12 +132,8 @@ class Action:
         """Don't return anything by default."""
         return {}
 
-    def get_extra_values(self, input_path: Path) -> dict[Any, Any]:
-        """Don't return anything by default."""
-        return {}
-
     def execute(
-        self, input_path: Path, output_path: Path, values: dict[Any, Any]
+        self, input_path: Path, output_path: Path, values: dict[Any, Any], env
     ) -> None:
         """Execute the action.
 
@@ -157,55 +147,3 @@ class Action:
     def __str__(self):
         return self.name
 
-
-@dataclass
-class RenderFromTextAction(Action):
-    frontmatter: bool = False
-    render_content: bool = False
-
-    def get_values(self, input_path: Path) -> dict[Any, Any]:
-        """Get values from frontmatter.
-
-        To be overloaded by the specific Action sub-classes when they don't
-        provide their values using a frontmatter.
-        """
-        if not self.frontmatter:
-            return {"_src": input_path.read_text()}
-
-        src, frontmatter_values = parse_values_from_frontmatter(input_path)
-
-        values = {}
-        values["_src"] = src
-        values.update(frontmatter_values)
-        return values
-
-
-@dataclass
-class RenderFromDataAction(Action):
-    output_name: Optional[str] = None
-
-    def get_output_name(self, values: dict[Any, Any]) -> str:
-        """Use the extension of the template if not explicit output_name template is passed."""
-        if "_output_name" not in values:
-            template_name = values["_template"]
-            template_path = Path(template_name)
-            values["_output_name"] = (
-                f"{{{{ _input_name.with_suffix('{template_path.suffix}') }}}}"
-            )
-        return super().get_output_name(values)
-
-    def execute(
-        self, input_path: Path, output_path: Path, values: dict[Any, Any]
-    ) -> None:
-        """Render template by passing all values."""
-
-        # get values
-        env = values["_env"]
-        template_name = values["_template"]
-
-        # render template
-        template = env.get_template(template_name)
-        rendered_content = template.render(values)
-
-        # write content
-        output_path.write_text(rendered_content)

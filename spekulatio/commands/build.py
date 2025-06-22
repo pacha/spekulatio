@@ -2,17 +2,19 @@ import logging
 from pathlib import Path
 
 import click
-from cels import patch_dictionary
 
+from spekulatio.paths import search_recipe_paths
+from spekulatio.paths import DEFAULT_VALUES_FILENAME
 from spekulatio.logs import log
 from spekulatio.logs import configure_logging
 from spekulatio.operations import build as build_operation
+from spekulatio.lib.paths import delete_directory_contents
 from spekulatio.lib.parse_values import parse_values_from_file
 from spekulatio.lib.parse_values import parse_values_from_string
 
 
 @click.command()
-@click.argument('spekulatio_file')
+@click.argument('recipe')
 @click.option(
     "-i",
     "--input-dir",
@@ -30,34 +32,29 @@ from spekulatio.lib.parse_values import parse_values_from_string
 @click.option(
     "-v",
     "--values",
-    "values_str",
+    "value_strings",
+    multiple=True,
     required=False,
     help="Values (as JSON or YAML string)",
 )
 @click.option(
     "-f",
     "--values-file",
-    "values_file",
+    "value_files",
+    multiple=True,
     required=False,
     help="Values (as path to a JSON or YAML file)",
 )
 @click.option(
-    "-D",
-    "--default-values-filename",
-    "default_values_filename",
+    "-F",
+    "--values-filename",
+    "values_filename",
     required=False,
-    default="_values.yaml",
-    help="Name of the values file to read in each directory.",
+    default=DEFAULT_VALUES_FILENAME,
+    help=f"Name of the values file to read in each directory (default: {DEFAULT_VALUES_FILENAME}).",
 )
 @click.option(
-    "-O",
-    "--override-values-filename",
-    "override_values_filename",
-    required=False,
-    default=None,
-    help="Name of the override values file to read in each directory.",
-)
-@click.option(
+    "-C",
     "--cache",
     "cache",
     is_flag=True,
@@ -77,77 +74,77 @@ from spekulatio.lib.parse_values import parse_values_from_string
     ),
 )
 @click.option(
-    "--verbose", default=False, is_flag=True, help="Show processing messages."
-)
-@click.option(
-    "--very-verbose", default=False, is_flag=True, help="Show debug information."
+    "-L",
+    "--log-level",
+    type=click.Choice(["debug", "info", "warning", "error", "critical"], case_sensitive=False),
+    default="warning",
+    help="Set the logging level (debug, info, warning, error, critical)"
 )
 def build(
-    spekulatio_file,
+    recipe,
     input_dir,
     output_dir,
-    values_str,
-    values_file,
-    default_values_filename,
-    override_values_filename,
+    value_strings,
+    value_files,
+    values_filename,
     cache,
     clear_output_first,
-    verbose,
-    very_verbose,
+    log_level,
 ):
     """Build output directory."""
 
     # logging
-    if very_verbose:
-        log_level = logging.DEBUG
-    elif verbose:
-        log_level = logging.INFO
-    else:
-        log_level = logging.WARN
-    configure_logging(log_level)
-    log.debug(f"Log level: {logging.getLevelName(log_level)}")
+    upper_log_level = log_level.upper()
+    numeric_log_level = getattr(logging, upper_log_level)
+    configure_logging(numeric_log_level)
+    log.debug(f"Log level: {upper_log_level}")
 
-    # values
-    values = {}
-    if values_file:
-        values_file_path = Path(values_file)
+    # gather values passed through command line
+    log.debug("Values from command line (later ones take precedence):")
+    value_overrides = []
+    for value_file in value_files:
+        value_file_path = Path(value_file)
         try:
             values_from_file = parse_values_from_file(
-                values_file_path.parent,
-                values_file_path.name,
+                value_file_path.parent,
+                value_file_path.name,
                 fail_if_missing=True,
             )
-            values = patch_dictionary(values, values_from_file)
         except Exception:
-            log.error("Impossible to parse values provided with the '-f/--value-file' option.")
+            log.error(f"Impossible to read values from {value_file}.")
             raise
-        log.debug(f"Values passed as file: {values_from_file}")
+        log.debug(f"Values from {value_file}: {values_from_file}")
+        value_overrides.append(values_from_file)
 
-    if values_str:
+    for value_string in value_strings:
         try:
-            values_from_string = parse_values_from_string(values_str)
-            values = patch_dictionary(values, values_from_string)
+            values_from_string = parse_values_from_string(value_string)
         except Exception:
-            log.error("Invalid '-v/--values' option.")
+            log.error("Can't parse values in string: {value_string}")
             raise
         log.debug(f"Values passed as string: {values_from_string}")
-    log.debug(f"Initial values: {values}")
+        value_overrides.append(values_from_string)
 
     # set paths
-    spekulatio_file_path = Path(spekulatio_file)
+    recipe_path = Path(recipe)
     input_path = Path(input_dir) if input_dir else None
     output_path = Path(output_dir)
+    search_paths = [Path.cwd()] + search_recipe_paths
 
     # clear output directory if necessary
     if clear_output_first:
         log.debug(f"Deleting contents from {output_path}...")
         delete_directory_contents(output_path)
 
-    return
-
     # build!
     log.debug("Building...")
     build_operation(
-        spekulatio_file_path, output_path, values_file, extra_values_file, cache=cache
+        recipe_path,
+        output_path,
+        input_path,
+        search_paths,
+        value_overrides,
+        values_filename,
+        cache,
     )
     log.debug("Done.")

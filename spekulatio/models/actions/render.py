@@ -5,34 +5,43 @@ from dataclasses import dataclass
 from jinja2 import Template
 
 from spekulatio.exceptions import SpekulatioInternalError
-from ..action import RenderFromTextAction
+from spekulatio.lib.parse_values import parse_values_from_frontmatter
+from ..action import Action
 
 
 @dataclass
-class Render(RenderFromTextAction):
-    frontmatter: bool = True
+class Render(Action):
+    """Renders a text file without using a template or changing the name."""
     render_content: bool = True
 
-    def execute(
-        self, input_path: Path, output_path: Path, values: dict[Any, Any]
-    ) -> None:
-        """Write file to the output path."""
-        # get source
-        try:
-            src = values["_src"]
-        except KeyError:
-            raise SpekulatioInternalError(
-                f"Malformed action '{self.__class__.__name__}': '_src' must be defined "
-                "before calling the execute method of this class."
-            )
+    def get_values(self, input_path: Path) -> dict[Any, Any]:
+        """Parse frontmatter if present."""
+        src, frontmatter_values = parse_values_from_frontmatter(input_path)
+        values = {
+            "_action": {
+                "src": src,
+            }
+        }
+        values.update(frontmatter_values)
+        return values
 
-        # get content
+    def execute(
+        self, input_path: Path, output_path: Path, values: dict[Any, Any], env
+    ) -> None:
+        """Render current file and write it to the output path."""
+
+        # get source
+        src = values["_action"]["src"]
+
+        # render content
         if self.render_content:
-            env = values["_env"]
-            src_template = env.from_string(src)
+            src_template = Template(src)
             content = src_template.render(values)
         else:
-            content = values["_src"]
+            content = src
+
+        # update values
+        values["_action"]["content"] = content
 
         # write content
         output_path.write_text(content)

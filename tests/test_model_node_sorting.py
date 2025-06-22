@@ -1,13 +1,13 @@
 import pytest
 
-from spekulatio.operations import get_layers
+from spekulatio.operations import get_recipes
 from spekulatio.operations import create_tree
 from spekulatio.exceptions import SpekulatioInputError
 
 
 def test_sorting_default(fixtures_path):
-    layers = get_layers(fixtures_path / "sorting-default")
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "sorting-default")
+    root = create_tree(recipes)
 
     # prev sibling
     assert root.get("dir1/a.md").prev_sibling is None
@@ -45,8 +45,8 @@ def test_sorting_default(fixtures_path):
 
 
 def test_sorting_sink(fixtures_path):
-    layers = get_layers(fixtures_path / "sorting-sink")
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "sorting-sink")
+    root = create_tree(recipes)
 
     # prev sibling
     assert root.get("dir1/b.md").prev_sibling is None
@@ -84,10 +84,10 @@ def test_sorting_sink(fixtures_path):
 
 
 def test_sorting_sink_top(fixtures_path):
-    layers = get_layers(fixtures_path / "sorting-sink-top")
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "sorting-sink-top")
+    root = create_tree(recipes)
 
-    assert [child.name for child in root.get("dir1").children] == [
+    assert [child.name for child in root.get("dir1").sorted_children] == [
         "c.md",
         "d.md",
         "e.md",
@@ -97,10 +97,10 @@ def test_sorting_sink_top(fixtures_path):
 
 
 def test_sorting_sink_bottom(fixtures_path):
-    layers = get_layers(fixtures_path / "sorting-sink-bottom")
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "sorting-sink-bottom")
+    root = create_tree(recipes)
 
-    assert [child.name for child in root.get("dir1").children] == [
+    assert [child.name for child in root.get("dir1").sorted_children] == [
         "b.md",
         "e.md",
         "a.md",
@@ -110,16 +110,14 @@ def test_sorting_sink_bottom(fixtures_path):
 
 
 def test_sorting_duplicate(fixtures_path):
-    layers = get_layers(fixtures_path / "sorting-duplicate")
-
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "sorting-duplicate")
+    root = create_tree(recipes)
     with pytest.raises(SpekulatioInputError):
-        _ = root.get("dir1").children
+        root.get("dir1").sort()
 
 
 def test_sorting_duplicate_sink(fixtures_path):
-    layers = get_layers(fixtures_path / "sorting-duplicate-sink")
-
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "sorting-duplicate-sink")
+    root = create_tree(recipes)
     with pytest.raises(SpekulatioInputError):
-        _ = root.get("dir1").children
+        root.get("dir1").sort()

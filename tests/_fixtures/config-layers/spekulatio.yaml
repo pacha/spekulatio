@@ -3,4 +3,4 @@ layers:
   - path: dir1/spekulatio.yaml
   - path: dir2/spekulatio.yaml
 
-path: foo/
+input_path: foo/

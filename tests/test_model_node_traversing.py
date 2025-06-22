@@ -1,13 +1,13 @@
 import pytest
 
-from spekulatio.operations import get_layers
+from spekulatio.operations import get_recipes
 from spekulatio.operations import create_tree
 from spekulatio.exceptions import SpekulatioInputError
 
 
 def test_traversing_with_get(fixtures_path):
-    layers = get_layers(fixtures_path / "traversing")
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "traversing")
+    root = create_tree(recipes)
 
     # test one node per string
     assert root == root.get()
@@ -39,8 +39,8 @@ def test_traversing_with_get(fixtures_path):
 
 
 def test_traversing_with_truediv(fixtures_path):
-    layers = get_layers(fixtures_path / "traversing")
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "traversing")
+    root = create_tree(recipes)
 
     # test one node per string
     assert root == root.get()
@@ -73,8 +73,8 @@ def test_traversing_with_truediv(fixtures_path):
 
 
 def test_fail_traversing(fixtures_path):
-    layers = get_layers(fixtures_path / "traversing")
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "traversing")
+    root = create_tree(recipes)
 
     with pytest.raises(SpekulatioInputError):
         _ = root.get("dir1/dir3")

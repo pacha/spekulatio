@@ -1,14 +1,14 @@
 import time
 
-from spekulatio.operations import get_layers
+from spekulatio.operations import get_recipes
 from spekulatio.operations import create_tree
 from spekulatio.operations import write_tree
 
 
-def test_extra_values(fixtures_path, output_path):
+def test_cache(fixtures_path, output_path):
     # write output for the first time
-    layers = get_layers(fixtures_path / "cache")
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "cache")
+    root = create_tree(recipes)
     write_tree(output_path, root, cache=False)
     first_timestamp = (output_path / "foo.yaml").stat().st_mtime
 

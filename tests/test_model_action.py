@@ -14,7 +14,7 @@ def test_action_create():
         }
     )
     assert action.patterns == ["*.jpeg", "*.jpg"]
-    assert action.output_name == "{{ _input_name }}"
+    assert action.output_name == "{{ _input_path.name }}"
 
 
 def test_action_fail_extra_fields():
@@ -61,10 +61,10 @@ def test_action_output_name():
         {
             "name": "Md2Html",
             "patterns": ["*.md"],
-            "output_name": "{{ _input_name.with_suffix('.html') }}",
+            "output_name": "{{ _input_path.with_suffix('.html').name }}",
         }
     )
     values = {
-        "_input_name": Path("bar.md"),
+        "_input_path": Path("bar.md"),
     }
     assert action.get_output_name(values) == "bar.html"

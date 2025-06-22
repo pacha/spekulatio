@@ -7,12 +7,14 @@ from schema import Schema
 from schema import Optional
 from jinja2 import Template
 
+from spekulatio.logs import log
 from spekulatio.exceptions import SpekulatioInternalError
-from ..action import RenderFromTextAction
+from spekulatio.lib.parse_values import parse_values_from_frontmatter
+from ..action import Action
 
 
 @dataclass
-class Md2Html(RenderFromTextAction):
+class Md2Html(Action):
     patterns: tuple[str] = (
         "*.md",
         "*.mkd",
@@ -21,8 +23,7 @@ class Md2Html(RenderFromTextAction):
         "*.mdwon",
         "*.markdown",
     )
-    output_name: str = "{{ _input_name.with_suffix('.html') }}"
-    frontmatter: bool = True
+    output_name: str = "{{ _input_path.with_suffix('.html').name }}"
     render_content: bool = True
 
     def validate_parameters(self):
@@ -37,19 +38,24 @@ class Md2Html(RenderFromTextAction):
         )
         schema.validate(self.parameters)
 
+    def get_values(self, input_path: Path) -> dict[Any, Any]:
+        """Parse frontmatter if present."""
+        src, frontmatter_values = parse_values_from_frontmatter(input_path)
+        values = {
+            "_action": {
+                "src": src,
+            }
+        }
+        values.update(frontmatter_values)
+        return values
+
     def execute(
-        self, input_path: Path, output_path: Path, values: dict[Any, Any]
+        self, input_path: Path, output_path: Path, values: dict[Any, Any], env
     ) -> None:
         """Render current file and write it to the output path."""
 
         # get source
-        try:
-            src = values["_src"]
-        except KeyError:
-            raise SpekulatioInternalError(
-                f"Malformed action '{self.__class__.__name__}': '_src' must be defined "
-                "before calling the execute method of this class."
-            )
+        src = values["_action"]["src"]
 
         # get content
         if self.render_content:
@@ -63,18 +69,15 @@ class Md2Html(RenderFromTextAction):
         content = md.convert(md_content)
 
         # update values
-        values["_md"] = md
         values["_content"] = content
+        values["_action"]["md"] = md
         if hasattr(md, "toc_tokens"):
-            values["_toc"] = md.toc_tokens
-
-        # get values
-        env = values["_env"]
-        template_name = values["_template"]
+            values["_action"]["toc"] = md.toc_tokens
 
         # render template
+        template_name = values["_template"]
         template = env.get_template(template_name)
-        full_html_content = template.render(values)
+        rendered_content = template.render(values)
 
         # write content
-        output_path.write_text(full_html_content)
+        output_path.write_text(rendered_content)

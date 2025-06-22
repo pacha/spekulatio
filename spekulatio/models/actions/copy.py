@@ -9,15 +9,16 @@ from ..action import Action
 
 @dataclass
 class Copy(Action):
+
     def validate_parameters(self):
         """This action takes no parameters."""
         if self.parameters:
             raise SpekulatioInputError(
-                f"Action {self.__class__.__name__} takes no parameters."
+                f"Action {self} takes no parameters."
             )
 
     def execute(
-        self, input_path: Path, output_path: Path, values: dict[Any, Any]
+        self, input_path: Path, output_path: Path, values: dict[Any, Any], env
     ) -> None:
         """Copy file to the output directory."""
         shutil.copy(input_path, output_path)

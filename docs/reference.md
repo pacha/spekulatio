@@ -22,9 +22,13 @@ Examples:
 Example displaying all fields:
 
     layers:
-      - path: /path/to/some/other/spekulatio.yaml
-    path: .
-    values_file: "_values.yaml"
+      - id: template
+        path: /path/to/some/other/spekulatio.yaml
+        input_path: .
+        values:
+            bar: 2
+        values_filename: "_values.yaml"
+    input_path: .
     actions:
       - name: Md2Html
         package: spekulatio
@@ -38,6 +42,7 @@ Example displaying all fields:
             - fenced_code
     values:
       foo: 1
+    values_filename: "_values.yaml"
 
 ### `layers` (List | Optional | Default: [])
 
@@ -230,11 +235,3 @@ Note that:
   the end in alphabetical order.
 * By default, the sorting value is `"*"` which results in the files/directories
   being sorted alphabetically.
-
-`_output_name` (jinja template)
-
-Variable used to override the output name template set in the `spekulatio.yaml`.
-If placed inside a front-matter, the corresponding output file is renamed
-accordingly. If placed inside a `_values.yaml` file, it is the output directory
-associated to the containing directory the one named according to the template
-provided.

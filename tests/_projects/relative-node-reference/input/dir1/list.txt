@@ -1,5 +1,5 @@
 
-Children of two (referenced relatively to current directory):
-{% for child in node("dir2").children %}
+Children of dir2 (referenced relatively to current directory):
+{% for child in _node.parent.get("dir2").sorted_children %}
   - {{ child.url }}
 {% endfor %}

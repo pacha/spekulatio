@@ -4,7 +4,7 @@ layers:
     values:
       this: 1
       that: 2
-path: .
+input_path: .
 transformations:
   - name: Md2Html
   - name: Sass2Css

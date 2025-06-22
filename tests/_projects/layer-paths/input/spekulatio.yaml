@@ -1,4 +1,3 @@
 layers:
   - path: with-filename/spekulatio.yaml
   - path: without-filename/
-  - path: spekulatio-theme/spekulatio.yaml

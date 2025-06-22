@@ -5,16 +5,25 @@ project_dir := justfile_directory()
   just --list
 
 @setup:
-  pip install -e ".[dev]"
+  uv pip install ".[dev]"
 
 @test-all:
-  pytest --capture=no -o log_cli=false tests/
+  uv run python -m pytest --capture=no -o log_cli=false tests/
 
 @test *params:
-  pytest -vv -x -o log_cli=true {{ params }}
+  uv run python -m pytest -vv -x -o log_cli=true {{ params }}
+
+@lint:
+  uv run ruff check
+
+@fix:
+  uv run ruff --fix
 
 @format:
-  black {{ project_dir }}
+  uv run ruff-format
 
-@check:
-  mypy {{ project_dir }}
+@check-pyright:
+  uv run pyright
+
+@check-mypy:
+  uv run mypy

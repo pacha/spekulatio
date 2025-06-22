@@ -1,9 +1,5 @@
-path: .
+input_path: .
 actions:
   - name: Render
     patterns:
-      - "foo/*.txt"
-  - name: Render
-    frontmatter: false
-    patterns:
-      - "bar/*.txt"
+      - "*.txt"

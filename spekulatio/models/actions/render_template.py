@@ -1,41 +1,48 @@
 from typing import Any
+from typing import Optional
 from pathlib import Path
 from dataclasses import dataclass
 
 from jinja2 import Template
 
 from spekulatio.exceptions import SpekulatioInternalError
-from ..action import RenderFromTextAction
+from ..action import Action
 
 
 @dataclass
-class RenderTemplate(RenderFromTextAction):
-    frontmatter: bool = True
+class RenderTemplate(Action):
     render_content: bool = True
-    output_name = None
+    output_name: Optional[str] = None
 
-    def get_output_name(self, values: dict[Any, Any]) -> str:
+    def get_values(self, input_path: Path) -> dict[Any, Any]:
+        """Parse frontmatter if present."""
+        src, frontmatter_values = parse_values_from_frontmatter(input_path)
+        values = {
+            "_action": {
+                "src": src,
+            }
+        }
+        values.update(frontmatter_values)
+        return values
+
+    def get_output_name(self, values: dict[Any, Any], output_name: Optional[str] = None) -> str:
         """Use the extension of the template if not explicit output_name template is passed."""
-        if "_output_name" not in values:
+        if self.output_name:
+            new_output_name = self.output_name
+        else:
             template_name = values["_template"]
             template_path = Path(template_name)
-            values["_output_name"] = (
-                f"{{{{ _input_name.with_suffix('{template_path.suffix}') }}}}"
-            )
-        return super().get_output_name(values)
+            template_suffix = template_path.suffix
+            new_output_name = f"{{{{ _input_path.with_suffix('{template_suffix}').name }}}}"
+        return super().get_output_name(values, output_name=new_output_name)
 
     def execute(
-        self, input_path: Path, output_path: Path, values: dict[Any, Any]
+        self, input_path: Path, output_path: Path, values: dict[Any, Any], env
     ) -> None:
-        """Write file to the output path."""
+        """Render current file and write it to the output path."""
+
         # get source
-        try:
-            src = values["_src"]
-        except KeyError:
-            raise SpekulatioInternalError(
-                f"Malformed action '{self.__class__.__name__}': '_src' must be defined "
-                "before calling the execute method of this class."
-            )
+        src = values["_action"]["src"]
 
         # get content
         if self.render_content:
@@ -45,15 +52,12 @@ class RenderTemplate(RenderFromTextAction):
             content = src
 
         # update values
-        values["_content"] = content
-
-        # get values
-        env = values["_env"]
-        template_name = values["_template"]
+        values["_action"]["content"] = content
 
         # render template
+        template_name = values["_template"]
         template = env.get_template(template_name)
-        full_content = template.render(values)
+        rendered_content = template.render(values)
 
         # write content
-        output_path.write_text(full_content)
+        output_path.write_text(rendered_content)

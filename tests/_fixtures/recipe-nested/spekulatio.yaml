@@ -1,0 +1,11 @@
+
+layers:
+  - id: nested
+    path: nested
+    values:
+      foo: bar
+input_path: .
+actions: []
+values:
+  a: 100
+

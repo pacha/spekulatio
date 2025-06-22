@@ -1,17 +1,10 @@
 from spekulatio.models import Node
-from spekulatio.models import Layer
+from spekulatio.models import Recipe
 
-
-def create_tree(layers: list[Layer]) -> Node:
-    """Create output tree in memory from layer definitions."""
-    # create root
-    root = Node(name=".")
-
-    # apply layers
-    for layer in layers:
-        layer.apply_to(root)
-
-    # don't include empty directories
+def create_tree(recipes: list[Recipe]) -> Node:
+    """Create a representation of the file tree in memory."""
+    root = Node(parent=None, name=".")
+    for recipe in recipes:
+        recipe.apply_to(root)
     root.prune()
-
     return root

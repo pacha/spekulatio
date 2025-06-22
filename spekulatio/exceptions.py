@@ -8,3 +8,6 @@ class SpekulatioInternalError(SpekulatioError):
 
 class SpekulatioInputError(SpekulatioError):
     """User input error."""
+
+class SpekulatioValidationError(SpekulatioInputError):
+    """Wrong structure in one of the configuration files provided."""

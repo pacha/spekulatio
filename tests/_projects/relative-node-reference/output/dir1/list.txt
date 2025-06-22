@@ -1,5 +1,5 @@
 
-Children of two (referenced relatively to current directory):
+Children of dir2 (referenced relatively to current directory):
 
   - /dir1/dir2/bar.html
 

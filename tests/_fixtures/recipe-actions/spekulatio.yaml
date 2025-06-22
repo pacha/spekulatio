@@ -1,0 +1,13 @@
+
+input_path: .
+actions:
+  - name: Md2Html
+    package: spekulatio
+    patterns:
+    - "*.md"
+    - "*.markdown"
+    output_name: "{{ _input_name.with_suffix('.html') }}"
+    parameters:
+      extensions:
+        - toc
+        - fenced_code

@@ -1,4 +1,4 @@
-path: .
+input_path: .
 actions:
   - name: Md2Html
   - name: Render

@@ -12,10 +12,10 @@ from ..action import Action
 @dataclass
 class Unzip(Action):
     patterns: tuple[str] = ("*.zip", "*.ZIP")
-    output_name: Optional[str] = "{{ _input_name.stem }}"
+    output_name: Optional[str] = "{{ _input_path.stem }}"
 
     def execute(
-        self, input_path: Path, output_path: Path, values: dict[Any, Any]
+        self, input_path: Path, output_path: Path, values: dict[Any, Any], env
     ) -> None:
         """Unzip file.
 

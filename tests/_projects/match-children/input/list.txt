@@ -1,10 +1,10 @@
 
 List of HTML files:
-{% for child in node("/dir1").children | with_value("skip") %}
+{% for child in _root.get("/dir1").find("skip") %}
   - {{ child.url }}
 {% endfor %}
 
 List of non-skipped files:
-{% for child in _this.parent.get_children() %}
+{% for child in _node.parent.sorted_children %}
   - {{ child.url }}
 {% endfor %}

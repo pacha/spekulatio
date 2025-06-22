@@ -1,5 +1,0 @@
-path: .
-actions:
-  - name: CompileSass
-    parameters:
-      output_style: expanded

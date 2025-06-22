@@ -41,11 +41,12 @@ tests = [
   "pyyaml",
 ]
 type-checks = [
+  "pyright",
   "mypy",
   "types-pyyaml",
 ]
 code-formatting = [
-  "black",
+  "ruff",
 ]
 publish = [
   "build",

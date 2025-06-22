@@ -1,10 +1,11 @@
-from spekulatio.operations import get_layers
+
+from spekulatio.logs import log
+from spekulatio.operations import get_recipes
 from spekulatio.operations import create_tree
 
-
 def test_default_values(fixtures_path):
-    layers = get_layers(fixtures_path / "values-default")
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "values-default")
+    root = create_tree(recipes)
 
     # dir1 must show the default values
     assert root.get("dir1").values["_template"] == "spekulatio/default.html"
@@ -28,24 +29,24 @@ def test_default_values(fixtures_path):
 
 
 def test_values_frontmatter(fixtures_path):
-    layers = get_layers(fixtures_path / "values-frontmatter")
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "values-frontmatter")
+    root = create_tree(recipes)
 
     node = root / "foo.md"
     assert node.user_values == {"foo": 1, "bar": 2}
 
 
 def test_values_directory(fixtures_path):
-    layers = get_layers(fixtures_path / "values-directory")
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "values-directory")
+    root = create_tree(recipes)
 
     node = root / "foo"
     assert node.user_values == {"foo": 1, "bar": 2}
 
 
 def test_values_inheritance(fixtures_path):
-    layers = get_layers(fixtures_path / "values-inheritance")
-    root = create_tree(layers)
+    recipes = get_recipes(fixtures_path / "values-inheritance")
+    root = create_tree(recipes)
 
     # values in the layer definitions can be patched
     assert root.values["e"] == [5, 6]

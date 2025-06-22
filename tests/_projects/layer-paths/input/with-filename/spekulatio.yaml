@@ -1,4 +1,4 @@
-path: .
+input_path: .
 actions:
   - name: Copy
     patterns:

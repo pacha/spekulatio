@@ -1,5 +1,5 @@
 
 Nodes with "number" greater than 2:
-{% for child in node("/dir1").descendants | value_gt("number", 2) %}
+{% for child in _root.get("dir1").find("number > 2") %}
   - {{ child.url }}
 {% endfor %}
