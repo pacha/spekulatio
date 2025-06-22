@@ -35,7 +35,7 @@ Example displaying all fields:
         patterns:
         - "*.md"
         - "*.markdown"
-        output_name: "{{ _input_name.with_suffix('.html') }}"
+        output_name: "{{ _input_path.with_suffix('.html').name }}"
         parameters:
           extensions:
             - toc
@@ -65,19 +65,13 @@ For each layer:
   `spekulatio.yaml` file pointed by `path` defines `default_values`, the values in
   this dictionary will override the default ones.
 
-### `path` (String | Optional | Default: `.`)
+### `input_path` (String | Optional | Default: `.`)
 
-Path to the input dictionary to process.
+Path to the input directory to process.
 
-### `preset` (String | Optional | Default: None)
+### `actions` (List | Optional | Default: [])
 
-Name of the preset to use. A preset is a reusable list of rules (see
-[LINK:presets]). The rules in the preset have less precedence than the rules
-listed in the `rules` key.
-
-### `rules` (List | Optional | Default: [])
-
-List of rules to transform the input directory located at `path` into the final
+List of actions to transform the input directory located at `input_path` into the final
 output directory.
 
 For each entry in the rules list:
@@ -112,6 +106,8 @@ For each entry in the rules list:
   particular rule you're using to see which ones are available.
   The keys of the parameters dictionary are always strings, the values must
   be of the type specified in the documentation of the rule.
+* `condition` (String | Optional | Default: no condition): condition that the
+  values associated to a node have to match for this action to be applied to it.
 
 #### Jinja template variables in rules
 
@@ -121,29 +117,6 @@ For each entry in the rules list:
 
 Dictionary of values to pass to the first node of the generated output tree.
 (see [LINK:working-with-values]).
-
-### `default_values` (Dictionary | Optional | Default: {})
-
-This is similar to `values`. However, if this `spekulatio.yaml` file is linked
-from the `layers` section of a parent Spekulatio file, the values passed from
-there will override this default values.
-
-For example:
-
-    # parent spekulatio.yaml file
-    layers:
-      path: /some/child/spekulatio.yaml
-      values:
-        fg_color: green
-
-    # /some/child/spekulatio.yaml
-    default_values:
-      fg_color: red
-      bg_color: blue
-
-Here, the final value of `fg_color` will be `green` as the default value will be
-overridden by the value set in the parent file. However, `bg_color` will be
-`blue` as the value is not overridden and the default one will be used.
 
 ## Node Object
 
@@ -190,7 +163,7 @@ Reference to the next node (in pre-order traversal)
 
 These are values that are available during the rendering of templates:
 
-`_this` (Node)
+`_node` (Node)
 
 Node that correspond to the file being rendered.
 
