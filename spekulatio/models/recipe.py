@@ -24,7 +24,7 @@ class Recipe:
     actions: list
     values: dict
     values_filename: str
-    recipe_filename: str
+    recipe_path: Path
 
     @classmethod
     def from_dict(
@@ -34,7 +34,7 @@ class Recipe:
         input_path: Optional[Path],
         value_overrides: list[dict[str, object]],
         values_filename: str,
-        recipe_filename: str,
+        recipe_path: Path,
     ):
         """Create object from dictionary."""
 
@@ -63,14 +63,17 @@ class Recipe:
         # values_filename
         actual_values_filename = data.get("values_filename", values_filename)
 
-        # input path
         return cls(
             input_path=actual_input_path,
             actions=actions,
             values=recipe_values,
             values_filename=actual_values_filename,
-            recipe_filename=recipe_filename,
+            recipe_path=recipe_path,
         )
+
+    @property
+    def recipe_filename(self):
+        return self.recipe_path.name
 
     def apply_to(self, root: Node):
         layer = Layer(path=self.input_path, action=ReadDirValues(values_filename=self.values_filename),  recipe=self)

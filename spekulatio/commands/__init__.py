@@ -1,3 +1,4 @@
+import sys
 import logging
 
 import click
@@ -8,7 +9,7 @@ from .serve import serve
 from .version import version
 
 from spekulatio.logs import log
-from spekulatio.exceptions import SpekulatioInputError
+from spekulatio.exceptions import SpekulatioError
 from spekulatio.exceptions import SpekulatioInternalError
 
 
@@ -16,15 +17,12 @@ class CustomGroup(click.Group):
     def invoke(self, ctx):
         try:
             super().invoke(ctx)
-        except SpekulatioInputError as err:
+        except SpekulatioError as err:
             log.error(err)
-        except (Exception, SpekulatioInternalError) as err:
-            log_level = logging.getLevelName(log.getEffectiveLevel())
-            if log_level == "DEBUG":
-                log.exception(f"An unexpected error occurred: {err}")
-            else:
-                log.error(f"An unexpected error occurred: {err}")
-
+            sys.exit(3)
+        except (SpekulatioInternalError, Exception) as err:
+            log.exception(f"An unexpected error occurred: {err}.\n\nFull traceback shown:\n\n")
+            sys.exit(4)
 
 @click.group(cls=CustomGroup, context_settings={"show_default": True})
 def spekulatio():

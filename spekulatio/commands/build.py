@@ -1,3 +1,4 @@
+import sys
 import logging
 from pathlib import Path
 
@@ -8,7 +9,8 @@ from spekulatio.paths import DEFAULT_VALUES_FILENAME
 from spekulatio.logs import log
 from spekulatio.logs import configure_logging
 from spekulatio.operations import build as build_operation
-from spekulatio.lib.paths import delete_directory_contents
+from spekulatio.exceptions import SpekulatioError
+from spekulatio.exceptions import SpekulatioInternalError
 from spekulatio.lib.parse_values import parse_values_from_file
 from spekulatio.lib.parse_values import parse_values_from_string
 
@@ -65,15 +67,6 @@ from spekulatio.lib.parse_values import parse_values_from_string
     ),
 )
 @click.option(
-    "--clear-output-first",
-    "clear_output_first",
-    is_flag=True,
-    default=False,
-    help=(
-        "Delete the contents of the output directory before generating the output."
-    ),
-)
-@click.option(
     "-L",
     "--log-level",
     type=click.Choice(["debug", "info", "warning", "error", "critical"], case_sensitive=False),
@@ -88,7 +81,6 @@ def build(
     value_files,
     values_filename,
     cache,
-    clear_output_first,
     log_level,
 ):
     """Build output directory."""
@@ -97,10 +89,9 @@ def build(
     upper_log_level = log_level.upper()
     numeric_log_level = getattr(logging, upper_log_level)
     configure_logging(numeric_log_level)
-    log.debug(f"Log level: {upper_log_level}")
+    log.info(f"Log level: {upper_log_level}")
 
     # gather values passed through command line
-    log.debug("Values from command line (later ones take precedence):")
     value_overrides = []
     for value_file in value_files:
         value_file_path = Path(value_file)
@@ -110,9 +101,9 @@ def build(
                 value_file_path.name,
                 fail_if_missing=True,
             )
-        except Exception:
-            log.error(f"Impossible to read values from {value_file}.")
-            raise
+        except Exception as err:
+            log.error(f"Impossible to read values from {value_file}. Error: {err}")
+            sys.exit(1)
         log.debug(f"Values from {value_file}: {values_from_file}")
         value_overrides.append(values_from_file)
 
@@ -121,7 +112,7 @@ def build(
             values_from_string = parse_values_from_string(value_string)
         except Exception:
             log.error("Can't parse values in string: {value_string}")
-            raise
+            sys.exit(2)
         log.debug(f"Values passed as string: {values_from_string}")
         value_overrides.append(values_from_string)
 
@@ -131,13 +122,7 @@ def build(
     output_path = Path(output_dir)
     search_paths = [Path.cwd()] + search_recipe_paths
 
-    # clear output directory if necessary
-    if clear_output_first:
-        log.debug(f"Deleting contents from {output_path}...")
-        delete_directory_contents(output_path)
-
     # build!
-    log.debug("Building...")
     build_operation(
         recipe_path,
         output_path,
@@ -147,4 +132,4 @@ def build(
         values_filename,
         cache,
     )
-    log.debug("Done.")
+    log.info("Done.")

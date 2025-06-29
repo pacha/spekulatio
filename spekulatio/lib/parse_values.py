@@ -28,7 +28,7 @@ def parse_values_from_file(directory: Path, filename: str, fail_if_missing=False
         return values
     else:
         if fail_if_missing:
-            raise FileNotFoundError(f"Can't find {values_path}.")
+            raise FileNotFoundError(f"File '{values_path}' not found.")
     return {}
 
 def parse_values_from_string(values_str: str):

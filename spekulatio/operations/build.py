@@ -26,11 +26,11 @@ def build(
     if not value_overrides:
         value_overrides = []
 
-    log.debug("Reading recipes...")
+    log.info("Reading recipes...")
     recipes = get_recipes(recipe_path, input_path, search_paths, value_overrides, values_filename)
 
-    log.debug("Creating in-memory tree...")
+    log.info("Creating in-memory tree...")
     root = create_tree(recipes)
 
-    log.debug("Writing output...")
+    log.info("Writing output...")
     write_tree(output_path, root, cache=cache)

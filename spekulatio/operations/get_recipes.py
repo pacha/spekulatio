@@ -108,13 +108,11 @@ def _get_recipes_rec(
                 input_path=input_path,
                 value_overrides=value_overrides_per_prefix[""],
                 values_filename=values_filename,
-                recipe_filename=actual_recipe_path.name,
+                recipe_path=actual_recipe_path,
             )
         except Exception as err:
-            raise
-            raise SpekulatioInputError(f"Error found while processing '{actual_recipe_path}': {err}")
+            raise SpekulatioInputError(f"Error found while processing '{actual_recipe_path}': {err}") from err
         recipes.append(recipe)
-
 
     return recipes
 

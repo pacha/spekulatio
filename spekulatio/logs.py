@@ -10,7 +10,7 @@ log = logging.getLogger("spekulatio")
 log.addHandler(logging.NullHandler())
 
 
-def configure_logging(level):
+def configure_logging(level=logging.INFO):
     error_console = Console(stderr=True)
     logging.basicConfig(
         level="WARN",

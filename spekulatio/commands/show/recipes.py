@@ -8,10 +8,10 @@ from spekulatio.operations import get_recipes
 from spekulatio.paths import search_recipe_paths
 
 
-@click.command(name="layers")
+@click.command(name="recipes")
 @click.argument('recipe')
-def show_layers(recipe):
-    """Show layers of a given recipe in the order in which they'll be applied."""
+def show_recipes(recipe):
+    """Show recipes in the order in which they'll be applied."""
 
     configure_logging()
 
@@ -22,4 +22,4 @@ def show_layers(recipe):
 
     # display paths in stdout
     for recipe in recipes:
-        rich_print(recipe.recipe_path)
+        rich_print(recipe)

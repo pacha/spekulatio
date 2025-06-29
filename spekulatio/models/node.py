@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from functools import cached_property
 
 from jinja2 import Environment
+from jinja2.exceptions import TemplateSyntaxError
 
 from cels import patch_dictionary
 from py_dictfind import check
@@ -13,6 +14,7 @@ from py_dictfind import check
 from spekulatio.logs import log
 from spekulatio.exceptions import SpekulatioInputError
 from spekulatio.exceptions import SpekulatioInternalError
+from spekulatio.exceptions import SpekulatioActionExecutionError
 from .layer import Layer
 
 @dataclass
@@ -432,13 +434,23 @@ class Node:
                 return
 
         # execute action
-        log.info(f"- {self} [{self.action}]")
+        log.info(f"- {self} {self.action}")
         try:
             self.action.execute(
                 input_path=abs_input_path, output_path=abs_output_path, values=self.values, env=env
             )
+        except TemplateSyntaxError as err:
+            location = f"(line: {err.lineno}"
+            location += f", column: {err.colno})" if hasattr(err, 'colno') else ")"
+            raise SpekulatioActionExecutionError(
+                f"Syntax error in template '{self}' {location}: {err}\n"
+                f"Full path: {self.absolute_input_path}"
+            ) from err
         except Exception as err:
-            raise Exception(f"Error {self}: {err}") from err
+            raise SpekulatioActionExecutionError(
+                f"Error while executing action {self.action} in '{self}': {err}\n"
+                f"Full path: {self.absolute_input_path}"
+            ) from err
 
     def __repr__(self):
         return f"<Node: {self.input_path}>"
