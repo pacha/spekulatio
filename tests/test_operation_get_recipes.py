@@ -69,7 +69,7 @@ def test_recipe_actions(fixtures_path):
 
     recipe = recipes[0]
     assert recipe.input_path == fixtures_path / "recipe-actions"
-    assert set([action.name() for action in recipe.actions]) == {"Md2Html", "CreateDir"}
+    assert set([action.name() for action in recipe.actions]) == {"Md2Html"}
 
 def test_split_value_overrides():
     """Test splitting user provided values across recipes."""

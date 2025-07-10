@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{{ _title }}</title>
+    </head>
+    <body>
+
+        {% for toc_element in _action.toc %}
+        <ul style="border: 1px solid #CCCCCC; margin-bottom: 1hw;">
+            {% for key, value in toc_element.items() %}
+            <li>{{ key }}: <strong>{{ value }}</strong></li>
+            {% endfor %}
+        </ul>
+        {% endfor %}
+
+    </body>
+</html>

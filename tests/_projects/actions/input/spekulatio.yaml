@@ -1,0 +1,28 @@
+input_path: .
+actions:
+  - name: Copy
+    patterns:
+      - "copy-without-rename.bin"
+  - name: Copy
+    patterns:
+      - "copy-to-rename.bin"
+    output_name: "renamed-copy.bin"
+  - name: Render
+    patterns:
+      - "*.txt"
+  - name: Noop
+    patterns:
+      - "noop.md"
+      - "/files-to-ignore"
+  - name: Md2Html
+    patterns:
+      - "md2html-extensions.md"
+    parameters:
+      extensions:
+        - toc
+  - name: Md2Html
+  - name: RenderJson
+  - name: RenderYaml
+values:
+  foo: "Foo"
+  bar: "Bar"

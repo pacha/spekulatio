@@ -16,6 +16,10 @@ class ReadDirValues(Action):
     values_filename: str = DEFAULT_VALUES_FILENAME
     process_children: ClassVar[bool] = True
 
+    def match(self, input_path: Path) -> bool:
+        """Return if the provided path matches the patterns of the action."""
+        return input_path.is_dir()
+
     def get_values(self, input_path: Path) -> dict[Any, Any]:
         """Get values from a values file (eg. _values.yaml)."""
         return parse_values_from_file(

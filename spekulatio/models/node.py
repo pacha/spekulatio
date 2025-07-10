@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Optional
 from typing import Generator
@@ -402,8 +403,8 @@ class Node:
             empty_directory = node.is_directory and not node.children
 
             if fails_action_condition or empty_directory:
-                reason = "empty directory" if empty_directory else "fails action condition"
-                log.info(f"Pruning directory '{node}': {reason}.")
+                name = str(node) + '/' if node.is_directory else ''
+                log.debug(f"- {name} (skipping: empty directory or ignored).")
                 del node.parent.children[node.name]
                 node.parent = None
 
@@ -424,6 +425,7 @@ class Node:
         """
         abs_input_path = self.absolute_input_path
         abs_output_path = self.get_absolute_output_path(base_output_path)
+        rel_output_path = abs_output_path.relative_to(base_output_path)
 
         # skip if file is cached
         if cache and abs_output_path and abs_output_path.exists():
@@ -434,7 +436,11 @@ class Node:
                 return
 
         # execute action
-        log.info(f"- {self} {self.action}")
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug(f"- {self} -> {rel_output_path} {self.action}")
+        else:
+            log.info(f"- {self} {self.action}")
+
         try:
             self.action.execute(
                 input_path=abs_input_path, output_path=abs_output_path, values=self.values, env=env

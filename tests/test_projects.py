@@ -1,5 +1,6 @@
 from filecmp import dircmp
 
+from spekulatio.lib.diffs import get_unified_diff
 from spekulatio.logs import log
 from spekulatio.operations import build
 
@@ -11,7 +12,9 @@ def compare_output(generated_output_path, expected_output_path) -> list:
         """Recursively convert comparison results to list."""
         diff = []
         for name in result.diff_files:
-            diff.append(f"Not matching: {name}")
+            file_diff = get_unified_diff(generated_output_path / name, expected_output_path / name)
+            diff.append(
+                f"Not matching: {name}. Diff:\n{file_diff}")
         for name in result.left_only:
             diff.append(
                 f"Only in generated output {generated_output_path.name}: {name}"
@@ -40,4 +43,4 @@ def test_project(project_path, output_path):
 
     # compare
     diff = compare_output(output_path, expected_output_path)
-    assert not diff
+    assert not diff, diff

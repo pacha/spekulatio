@@ -1,0 +1,7 @@
+{
+  "_template": "templates/data.html",
+  "_output_name": "json-{{ type }}.html",
+  "type": "data",
+  "foo": 1,
+  "bar": 2
+}

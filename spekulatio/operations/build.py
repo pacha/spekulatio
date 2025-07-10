@@ -28,6 +28,8 @@ def build(
 
     log.info("Reading recipes...")
     recipes = get_recipes(recipe_path, input_path, search_paths, value_overrides, values_filename)
+    if not recipes:
+        log.warning("Empty recipe. No output will be generated.")
 
     log.info("Creating in-memory tree...")
     root = create_tree(recipes)

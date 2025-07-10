@@ -9,8 +9,8 @@ import pytest
 def set_log_level(caplog):
     caplog.set_level(logging.ERROR, logger="cels")
     caplog.set_level(logging.ERROR, logger="py_walk")
+    caplog.set_level(logging.ERROR, logger="MARKDOWN")
     caplog.set_level(logging.DEBUG, logger="spekulatio")
-
 
 @pytest.fixture(scope="session")
 def fixtures_path():

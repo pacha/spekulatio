@@ -18,6 +18,7 @@ from .actions import ReadDirValues
 from .layer import Layer
 from .node import Node
 
+
 @dataclass
 class Recipe:
     input_path: Path
@@ -43,17 +44,20 @@ class Recipe:
 
         # input path
         provided_input_path = data.get("input_path", input_path)
-        actual_input_path = (current_path / provided_input_path) if provided_input_path else empty_path
+        if provided_input_path:
+            actual_input_path = current_path / provided_input_path
+        else:
+            log.warning(
+                f"No input path provided for recipe {recipe_path}. It won't generate any output."
+            )
+            actual_input_path = empty_path
 
         # actions
+        actions = []
         action_definitions = data.get("actions", [])
         if action_definitions:
-            # creating directories is always the first action (to be re-assessed in the future)
-            actions = [CreateDir(values_filename=values_filename)]
             for action_definition in action_definitions:
                 actions.append(Action.from_dict(action_definition))
-        else:
-            actions = []
 
         # values
         recipe_values = data.get("values", {})
@@ -76,29 +80,51 @@ class Recipe:
         return self.recipe_path.name
 
     def apply_to(self, root: Node):
-        layer = Layer(path=self.input_path, action=ReadDirValues(values_filename=self.values_filename),  recipe=self)
-        root.add_layer(layer)
-        self.apply_recursively(parent_path=self.input_path, parent_node=root)
+        """Apply current recipe to a given root node."""
 
-    def apply_recursively(self, parent_path: Path, parent_node: Node):
+        # default actions
+        root_action = ReadDirValues(values_filename=self.values_filename)
+        default_dir_action = CreateDir(values_filename=self.values_filename)
+
+        # set root layer
+        layer = Layer(path=self.input_path, action=root_action, recipe=self)
+        root.add_layer(layer)
+
+        # process all other nodes
+        self.apply_recursively(
+            parent_path=self.input_path,
+            parent_node=root,
+            default_dir_action=default_dir_action,
+        )
+
+    def apply_recursively(self, parent_path: Path, parent_node: Node, default_dir_action):
         for child_path in parent_path.iterdir():
-            action = self._get_action(child_path)
+            action = self._get_action(child_path, default_dir_action)
             if action:
                 layer = Layer(path=child_path, action=action, recipe=self)
                 child_node = parent_node.add_child_layer(child_path.name, layer)
 
                 if action.process_children:
-                    self.apply_recursively(child_path, child_node)
+                    self.apply_recursively(child_path, child_node, default_dir_action)
 
-    def _get_action(self, path: Path) -> Action:
+    def _get_action(self, path: Path, default_dir_action) -> Action:
         """Return action for a given path or None if none matches."""
+
+        relative_path = path.relative_to(self.input_path)
+
         # skip Spekulatio files
         if path.name in (self.values_filename, self.recipe_filename):
             return None
         for action in self.actions:
-            if action.match(path):
+            if action.match(relative_path):
                 return action
-        return None
+
+        # default actions
+        if path.is_dir():
+            return default_dir_action
+        else:
+            log.debug(f"- {relative_path} (skipping: no action matches)")
+            return None
 
     @staticmethod
     def _validate_recipe_data(data: dict) -> dict:
@@ -115,7 +141,9 @@ class Recipe:
                     dict, error="'values' should be a dictionary."
                 ),
                 OptionalField("values_filename"): And(
-                    str, len, error="If provided, 'values_filename' should be a non-empty string."
+                    str,
+                    len,
+                    error="If provided, 'values_filename' should be a non-empty string.",
                 ),
             }
         )
@@ -124,4 +152,3 @@ class Recipe:
         except SchemaError as err:
             raise SpekulatioValidationError(err)
         return validated_data
-

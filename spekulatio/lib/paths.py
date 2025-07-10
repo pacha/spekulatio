@@ -61,7 +61,7 @@ def search_project_in_path_list(project_marker: str, project_path: Path, root_pa
                 path = path / project_marker
             if path.is_file():
                 return path.expanduser().resolve()
-    msg = f"Can't find path '{project_path}'. "
+    msg = f"Can't find project at '{project_path}'. "
     if root_paths:
         msg += "Search directories: " + ", ".join([str(root_path) for root_path in root_paths])
     else:

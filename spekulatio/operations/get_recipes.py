@@ -9,6 +9,7 @@ from schema import Schema
 from schema import Regex
 from schema import Optional as OptionalField
 
+from spekulatio.logs import log
 from spekulatio.paths import search_recipe_paths
 from spekulatio.lib.paths import search_project_in_path_list
 from spekulatio.paths import DEFAULT_VALUES_FILENAME

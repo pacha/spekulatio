@@ -100,7 +100,13 @@ class Action:
         return cls.__name__
 
     def match(self, input_path: Path) -> bool:
-        """Return if the provided path matches the patterns of the action."""
+        """Return if the provided path matches the patterns of the action.
+        
+        This default implementation doesn't match directories. For actions that apply
+        to directories override this method in that specific subclass.
+        """
+        if input_path.is_dir():
+            return False
         is_a_match = self.parser.match(input_path)
         return is_a_match
 
