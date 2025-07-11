@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import markdown
 from schema import Schema
 from schema import Optional
-from jinja2 import Template
 
 from spekulatio.logs import log
 from spekulatio.exceptions import SpekulatioInputError
@@ -60,7 +59,7 @@ class Md2Html(Action):
 
         # get content
         if self.render_content:
-            src_template = Template(src)
+            src_template = env.from_string(src)
             md_content = src_template.render(values)
         else:
             md_content = src

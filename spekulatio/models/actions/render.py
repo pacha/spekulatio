@@ -2,8 +2,6 @@ from typing import Any
 from pathlib import Path
 from dataclasses import dataclass
 
-from jinja2 import Template
-
 from spekulatio.exceptions import SpekulatioInternalError
 from spekulatio.lib.parse_values import parse_values_from_frontmatter
 from ..action import Action
@@ -35,7 +33,7 @@ class Render(Action):
 
         # render content
         if self.render_content:
-            src_template = Template(src)
+            src_template = env.from_string(src)
             content = src_template.render(values)
         else:
             content = src

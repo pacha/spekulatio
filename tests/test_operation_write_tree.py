@@ -12,14 +12,14 @@ def test_cache(fixtures_path, output_path):
     write_tree(output_path, root, cache=False)
     first_timestamp = (output_path / "foo.yaml").stat().st_mtime
 
-    time.sleep(0.001)
+    time.sleep(0.01)
 
     # write output with cache (it shouldn't write anything)
     write_tree(output_path, root, cache=True)
     second_timestamp = (output_path / "foo.yaml").stat().st_mtime
     assert first_timestamp == second_timestamp
 
-    time.sleep(0.001)
+    time.sleep(0.01)
 
     # write output without cache
     write_tree(output_path, root, cache=False)
