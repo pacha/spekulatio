@@ -1,6 +1,7 @@
 import shutil
 from typing import Any
 from pathlib import Path
+from typing import ClassVar
 from dataclasses import dataclass
 
 from spekulatio.exceptions import SpekulatioInputError
@@ -9,6 +10,8 @@ from ..action import Action
 
 @dataclass
 class Copy(Action):
+    process_children: ClassVar[bool] = False
+    prune: ClassVar[str] = 'never'
 
     def validate_parameters(self):
         """This action takes no parameters."""

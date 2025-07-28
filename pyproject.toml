@@ -48,6 +48,10 @@ type-checks = [
 code-formatting = [
   "ruff",
 ]
+debug = [
+  "ipdb",
+  "ipython",
+]
 publish = [
   "build",
 ]

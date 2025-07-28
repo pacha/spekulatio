@@ -64,6 +64,15 @@ class Recipe:
         for overrides in value_overrides:
             recipe_values = patch_dictionary(recipe_values, overrides)
 
+        # check required values
+        required_values = data.get("required_values", {})
+        missing_keys = set(required_values.keys()) - set(recipe_values.keys())
+        if missing_keys:
+            msg = f"Missing required values for recipe {recipe_path}:\n"
+            for missing_key in missing_keys:
+                msg += f"- {missing_key}: {required_values[missing_key]}\n"
+            raise SpekulatioValidationError(msg)
+
         # values_filename
         actual_values_filename = data.get("values_filename", values_filename)
 
@@ -95,35 +104,49 @@ class Recipe:
             parent_path=self.input_path,
             parent_node=root,
             default_dir_action=default_dir_action,
+            skip_actions=tuple(),
         )
 
-    def apply_recursively(self, parent_path: Path, parent_node: Node, default_dir_action):
+    def apply_recursively(
+        self,
+        parent_path: Path,
+        parent_node: Node,
+        default_dir_action: Action,
+        skip_actions: tuple[Action],
+    ):
         for child_path in parent_path.iterdir():
-            action = self._get_action(child_path, default_dir_action)
+            action = self._get_action(child_path, default_dir_action, skip_actions)
             if action:
                 layer = Layer(path=child_path, action=action, recipe=self)
                 child_node = parent_node.add_child_layer(child_path.name, layer)
 
                 if action.process_children:
-                    self.apply_recursively(child_path, child_node, default_dir_action)
+                    if action.once_per_branch:
+                        skip_actions = skip_actions + (action,)
+                    self.apply_recursively(child_path, child_node, default_dir_action, skip_actions)
 
-    def _get_action(self, path: Path, default_dir_action) -> Action:
+    def _get_action(self, path: Path, default_dir_action: Action, skip_actions: tuple[Action]) -> Action:
         """Return action for a given path or None if none matches."""
 
         relative_path = path.relative_to(self.input_path)
 
         # skip Spekulatio files
         if path.name in (self.values_filename, self.recipe_filename):
+            log.debug(f"- Action for {relative_path}: None (spekulatio file).")
             return None
         for action in self.actions:
-            if action.match(relative_path):
+            if action in skip_actions:
+                continue
+            if action.match(self.input_path, relative_path):
+                log.debug(f"- Action for {relative_path}: {action}.")
                 return action
 
         # default actions
         if path.is_dir():
+            log.debug(f"- Action for {relative_path}: {default_dir_action} (default directory action).")
             return default_dir_action
         else:
-            log.debug(f"- {relative_path} (skipping: no action matches)")
+            log.debug(f"- Action for {relative_path}: None (no match).")
             return None
 
     @staticmethod
@@ -139,6 +162,9 @@ class Recipe:
                 ),
                 OptionalField("values"): And(
                     dict, error="'values' should be a dictionary."
+                ),
+                OptionalField("required_values"): And(
+                    dict, error="'required_values' should be a dictionary."
                 ),
                 OptionalField("values_filename"): And(
                     str,

@@ -49,11 +49,11 @@ def test_action_match():
             "patterns": ["*.txt", "foo/*/bar.md"],
         }
     )
-    assert action.match(Path("this.txt"))
-    assert action.match(Path("that/this.txt"))
-    assert action.match(Path("foo/baz/bar.md"))
-    assert not action.match(Path("baz/foo/bar.md"))
-    assert not action.match(Path("image.png"))
+    assert action.match(Path("/some-root"), Path("this.txt"))
+    assert action.match(Path("/some-root"), Path("that/this.txt"))
+    assert action.match(Path("/some-root"), Path("foo/baz/bar.md"))
+    assert not action.match(Path("/some-root"), Path("baz/foo/bar.md"))
+    assert not action.match(Path("/some-root"), Path("image.png"))
 
 
 def test_action_output_name():

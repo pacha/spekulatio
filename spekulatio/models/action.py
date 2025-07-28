@@ -30,7 +30,9 @@ class Action:
     render_content: bool = False
     parser: Parser = field(init=False)
     check_condition: Optional[Callable] = field(init=False)
-    process_children: ClassVar[bool] = False
+    process_children: ClassVar[bool] = False  # whether children are processed if matched
+    once_per_branch: ClassVar[bool] = False  # whether children can match this action if an ancestor was matched
+    prune: ClassVar[str] = 'never'  # options: never, if-no-children, always
 
     def __post_init__(self):
         self.parser = get_parser_from_list(self.patterns)
@@ -99,15 +101,13 @@ class Action:
     def name(cls):
         return cls.__name__
 
-    def match(self, input_path: Path) -> bool:
-        """Return if the provided path matches the patterns of the action.
-        
-        This default implementation doesn't match directories. For actions that apply
-        to directories override this method in that specific subclass.
-        """
-        if input_path.is_dir():
+    def match(self, root_path: Path, relative_path: Path) -> bool:
+        """Return if the provided path matches the patterns of the action. """
+        absolute_path = root_path / relative_path
+        # don't match directories by default
+        if absolute_path.is_dir():
             return False
-        is_a_match = self.parser.match(input_path)
+        is_a_match = self.parser.match(relative_path)
         return is_a_match
 
     def get_output_name(self, values: dict[Any, Any], output_name: Optional[str] = None) -> str:

@@ -1,0 +1,5 @@
+input_path: .
+actions:
+  - name: Copy
+    patterns:
+      - "/bar/baz"

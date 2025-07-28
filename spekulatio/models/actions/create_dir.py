@@ -15,10 +15,11 @@ from ..action import Action
 class CreateDir(Action):
     values_filename: str = DEFAULT_VALUES_FILENAME
     process_children: ClassVar[bool] = True
+    prune: ClassVar[str] = 'if-no-children'
 
-    def match(self, input_path: Path) -> bool:
-        """Return if the provided path matches the patterns of the action."""
-        return input_path.is_dir()
+    def match(self, root_path: Path, relative_path: Path) -> bool:
+        absolute_path = root_path / relative_path
+        return absolute_path.is_dir()
 
     def get_values(self, input_path: Path) -> dict[Any, Any]:
         """Get values from a values file (eg. _values.yaml)."""

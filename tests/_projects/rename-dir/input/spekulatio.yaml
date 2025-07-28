@@ -1,0 +1,9 @@
+input_path: .
+actions:
+  - name: RenameDir
+    patterns:
+      - "foo"
+    output_name: "this"
+  - name: Copy
+    patterns:
+      - "*.txt"

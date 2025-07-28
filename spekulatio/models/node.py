@@ -392,21 +392,50 @@ class Node:
     ## prune
 
     def prune(self):
-        """Remove all invalid descendants."""
+        """Remove all unneeded descendants.
+
+        Nodes that are pruned:
+        - nodes with no action
+        - empty directories
+        - nodes that don't meed the action 'condition'
+        - nodes that are ignored
+        """
+
+        def do_prune(node):
+            del node.parent.children[node.name]
+            node.parent = None
+
         # all nodes must me stored in a list so that the tree doesn't mutate during traversing
         for node in self.traverse_post_order():
 
             if node.is_root:
                 break
 
-            fails_action_condition = not node._meets_action_condition()
-            empty_directory = node.is_directory and not node.children
+            name = str(node) + ('/' if node.is_directory else '')
 
-            if fails_action_condition or empty_directory:
-                name = str(node) + '/' if node.is_directory else ''
-                log.debug(f"- {name} (skipping: empty directory or ignored).")
-                del node.parent.children[node.name]
-                node.parent = None
+            # no action node (this shouldn't ever happen though)
+            if not hasattr(node, 'action'):
+                log.debug(f"- {name} (skipping: no action).")
+                do_prune(node)
+                continue
+
+            # ignored
+            if node.action.prune == 'always':
+                log.debug(f"- {name} (skipping: ignored).")
+                do_prune(node)
+                continue
+
+            # empty dir
+            if node.action.prune == 'if-no-children' and node.is_directory and not node.children:
+                log.debug(f"- {name} (skipping: empty directory).")
+                do_prune(node)
+                continue
+
+            # doesn't meet condition
+            if not node._meets_action_condition():
+                log.debug(f"- {name} (skipping: action condition not met.).")
+                do_prune(node)
+                continue
 
     def _meets_action_condition(self):
         """Return if the current node meets its action condition."""
@@ -436,11 +465,7 @@ class Node:
                 return
 
         # execute action
-        if log.isEnabledFor(logging.DEBUG):
-            log.debug(f"- {self} -> {rel_output_path} {self.action}")
-        else:
-            log.info(f"- {self} {self.action}")
-
+        log.info(f"- {self} -> {rel_output_path} {self.action}")
         try:
             self.action.execute(
                 input_path=abs_input_path, output_path=abs_output_path, values=self.values, env=env

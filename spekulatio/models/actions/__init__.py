@@ -6,5 +6,6 @@ from .md2html import Md2Html
 from .render_json import RenderJson
 from .render_yaml import RenderYaml
 from .create_dir import CreateDir
+from .rename_dir import RenameDir
 from .read_dir_values import ReadDirValues
 from .render_template import RenderTemplate
