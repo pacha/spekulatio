@@ -8,5 +8,6 @@ from .models.actions import RenameDir
 from .models.actions import RenderJson
 from .models.actions import RenderYaml
 from .models.actions import RenderTemplate
+from .models.actions import CreateVirtualNode
 
 from .version import __version__

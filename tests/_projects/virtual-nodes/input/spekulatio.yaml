@@ -1,0 +1,6 @@
+input_path: .
+actions:
+  - name: Copy
+    patterns:
+      - "*.txt"
+  - name: CreateVirtualNode

@@ -24,6 +24,7 @@ class Node:
     parent: Optional["Node"]
     children: dict[str, "Node"] = field(default_factory=dict)
     layers: list[Layer] = field(default_factory=list)
+    virtual: bool = False
 
     # sort attributes
     _sorted: bool = False
@@ -437,6 +438,17 @@ class Node:
                 do_prune(node)
                 continue
 
+            # virtual nodes
+            if not node.action.generates_output:
+                log.debug(f"- {name} (setting as virtual node: it doesn't generate output).")
+                node.virtual = True
+                continue
+
+            if node.is_directory and all([child.virtual for child in node.children.values()]):
+                log.debug(f"- {name} (setting as virtual node: it contains only virtual nodes).")
+                node.virtual = True
+                continue
+
     def _meets_action_condition(self):
         """Return if the current node meets its action condition."""
         if not self.layers or not self.action.condition:
@@ -455,6 +467,11 @@ class Node:
         abs_input_path = self.absolute_input_path
         abs_output_path = self.get_absolute_output_path(base_output_path)
         rel_output_path = abs_output_path.relative_to(base_output_path)
+
+        # skip if virtual node
+        if self.virtual:
+            log.info(f"- {self} (Virtual Node)")
+            return
 
         # skip if file is cached
         if cache and abs_output_path and abs_output_path.exists():

@@ -33,6 +33,7 @@ class Action:
     process_children: ClassVar[bool] = False  # whether children are processed if matched
     once_per_branch: ClassVar[bool] = False  # whether children can match this action if an ancestor was matched
     prune: ClassVar[str] = 'never'  # options: never, if-no-children, always
+    generates_output: bool = True  # some actions only read data but doesn't generate any output file or directory
 
     def __post_init__(self):
         self.parser = get_parser_from_list(self.patterns)
