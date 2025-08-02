@@ -1,0 +1,8 @@
+input_path: .
+actions:
+  - name: Run
+    patterns:
+      - "*.txt"
+    parameters:
+      command: "sort {{ _input_path }} > {{ _output_path }}"
+    output_name: "sorted-{{ _input_path.name }}"

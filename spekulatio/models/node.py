@@ -496,8 +496,8 @@ class Node:
             ) from err
         except Exception as err:
             raise SpekulatioActionExecutionError(
-                f"Error while executing action {self.action} in '{self}': {err}\n"
-                f"Full path: {self.absolute_input_path}"
+                f"Error while executing action {self.action} on '{self}': {err}\n"
+                f"Full input path: {self.absolute_input_path}"
             ) from err
 
     def __repr__(self):

@@ -65,6 +65,9 @@ class Action:
                 OptionalField("render_content"): And(
                     bool, error="'render_content' should be a boolean value."
                 ),
+                OptionalField("generates_output"): And(
+                    bool, error="'generates_output' should be a boolean value."
+                ),
             }
         )
         try:
