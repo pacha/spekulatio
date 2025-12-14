@@ -11,8 +11,8 @@ from spekulatio.paths import search_recipe_paths
 
 
 @click.command(name="tree")
-@click.argument('recipe')
-def show_tree(recipe):
+@click.argument('recipe_location')
+def show_tree(recipe_location):
     """Show output tree."""
 
     configure_logging()
@@ -26,9 +26,8 @@ def show_tree(recipe):
             build_visualization_tree(viz_child, data_child)
 
     # get output tree
-    recipe_path = Path(recipe)
     search_paths = [Path.cwd()] + search_recipe_paths
-    recipes = get_recipes(recipe_path, search_paths=search_paths)
+    recipes = get_recipes(recipe_location, search_paths=search_paths)
     data_tree = create_tree(recipes)
 
     # create visualization tree

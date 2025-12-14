@@ -1,0 +1,1 @@
+"""Git support for Spekulatio recipes."""

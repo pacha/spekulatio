@@ -10,11 +10,11 @@ from spekulatio.exceptions import SpekulatioInputError
 
 def test_recipe_fail_wrong_path(fixtures_path):
     with pytest.raises(SpekulatioInputError):
-        _ = get_recipes(fixtures_path / "wrong-layer-path")
+        _ = get_recipes(str(fixtures_path / "wrong-layer-path"))
 
 def test_recipe_simple(fixtures_path):
     recipes = get_recipes(
-        recipe_path=Path("recipe-simple"),
+        recipe_location="recipe-simple",
         search_paths=[fixtures_path],
         value_overrides=[{"a": 150, "e": 550, "f": 650}, {"a": 175, "b": 250, "c {delete}": None}]
     )
@@ -35,7 +35,7 @@ def test_recipe_simple(fixtures_path):
 
 def test_recipe_nested(fixtures_path):
     recipes = get_recipes(
-        recipe_path=Path("recipe-nested"),
+        recipe_location="recipe-nested",
         input_path=Path("/foo"),
         search_paths=[fixtures_path],
     )
@@ -62,7 +62,7 @@ def test_recipe_nested(fixtures_path):
 
 def test_recipe_actions(fixtures_path):
     recipes = get_recipes(
-        recipe_path=Path("recipe-actions"),
+        recipe_location="recipe-actions",
         search_paths=[fixtures_path],
     )
     assert len(recipes) == 1

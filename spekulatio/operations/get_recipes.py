@@ -9,22 +9,46 @@ from schema import Schema
 from schema import Regex
 from schema import Optional as OptionalField
 
-from spekulatio.logs import log
 from spekulatio.paths import search_recipe_paths
 from spekulatio.lib.paths import search_project_in_path_list
 from spekulatio.paths import DEFAULT_VALUES_FILENAME
 from spekulatio.paths import DEFAULT_SPEKULATIO_FILENAME
 from spekulatio.models import Recipe
 from spekulatio.exceptions import SpekulatioInputError
+from spekulatio.lib.git.uri import is_git_uri
+from spekulatio.lib.git.operations import ensure_repository
+
+
+def resolve_recipe_location(location: str) -> Path:
+    """Resolve a recipe location (Git URI or local path) to a local path.
+    
+    Args:
+        location: Either a Git URI or a local filesystem path
+        
+    Returns:
+        Local Path to the recipe directory
+        
+    Raises:
+        SpekulatioInputError: If location cannot be resolved
+    """
+    if is_git_uri(location):
+        try:
+            return ensure_repository(location)
+        except Exception as e:
+            raise SpekulatioInputError(f"Failed to access Git repository '{location}': {e}")
+    else:
+        # It's a local path, convert to Path and return
+        return Path(location)
+
 
 def get_recipes(
-    recipe_path: Path,
+    recipe_location: str,
     input_path: Optional[Path] = None,
     search_paths: Optional[list[Path]] = None,
     value_overrides: Optional[list[dict]] = None,
     values_filename: str = DEFAULT_VALUES_FILENAME,
 ) -> list[Recipe]:
-    """Create the Recipe pointed to by `recipe_path` and all its children recipes.
+    """Create the Recipe pointed to by `recipe_location` and all its children recipes.
 
     The recipes are returned in the order in which they should be applied to get
     the final result. The root recipe is returned as the last element of the list.
@@ -35,6 +59,9 @@ def get_recipes(
         search_paths = []
     if not value_overrides:
         value_overrides = []
+
+    # Resolve recipe location (Git URI or local path) to a local path
+    recipe_path = resolve_recipe_location(recipe_location)
 
     return _get_recipes_rec(
         recipe_path, input_path, search_paths, value_overrides, values_filename, values_prefix="", all_recipe_paths=set()
@@ -88,11 +115,17 @@ def _get_recipes_rec(
     for layer_definition in layer_definitions:
         prefix = layer_definition.get("id")
         layer_input_path = layer_definition.get("input_path", input_path)
+        
+        # Resolve layer path (could be a Git URI)
+        layer_location = layer_definition["path"]
+        layer_search_paths = [actual_recipe_path.parent] + search_recipe_paths
+        layer_recipe_path = resolve_recipe_location(layer_location)
+        
         recipes.extend(
             _get_recipes_rec(
-                recipe_path=Path(layer_definition["path"]),
+                recipe_path=layer_recipe_path,
                 input_path=Path(layer_input_path) if layer_input_path else None,
-                search_paths=[actual_recipe_path.parent] + search_recipe_paths,
+                search_paths=layer_search_paths,
                 value_overrides=[layer_definition.get("values", {})] + value_overrides_per_prefix[prefix],
                 values_filename=layer_definition.get("values_filename", DEFAULT_VALUES_FILENAME),
                 values_prefix=f"{values_prefix}.{prefix}",
@@ -122,7 +155,7 @@ def _validate_layer_definitions(raw_layer_definitions: list[dict]) -> list[dict]
 
     if not isinstance(raw_layer_definitions, list):
         raise SpekulatioInputError(
-            f"{spekulatio_file_path}: 'layers' should be a list of dictionaries."
+            "'layers' should be a list of dictionaries."
         )
 
     schema = Schema(

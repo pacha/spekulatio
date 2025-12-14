@@ -9,16 +9,15 @@ from spekulatio.paths import search_recipe_paths
 
 
 @click.command(name="layers")
-@click.argument('recipe')
-def show_layers(recipe):
+@click.argument('recipe_location')
+def show_layers(recipe_location):
     """Show layers of a given recipe in the order in which they'll be applied."""
 
     configure_logging()
 
     # get all nested recipes
-    recipe_path = Path(recipe)
     search_paths = [Path.cwd()] + search_recipe_paths
-    recipes = get_recipes(recipe_path, search_paths=search_paths)
+    recipes = get_recipes(recipe_location, search_paths=search_paths)
 
     # display paths in stdout
     for recipe in recipes:

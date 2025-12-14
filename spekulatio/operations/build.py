@@ -10,7 +10,7 @@ from .write_tree import write_tree
 
 
 def build(
-    recipe_path: Path,
+    recipe_location: str,
     output_path: Path,
     input_path: Optional[Path] = None,
     search_paths: Optional[list[Path]] = None,
@@ -27,7 +27,7 @@ def build(
         value_overrides = []
 
     log.info("Reading recipes...")
-    recipes = get_recipes(recipe_path, input_path, search_paths, value_overrides, values_filename)
+    recipes = get_recipes(recipe_location, input_path, search_paths, value_overrides, values_filename)
     if not recipes:
         log.warning("Empty recipe. No output will be generated.")
 

@@ -16,7 +16,7 @@ from spekulatio.lib.parse_values import parse_values_from_string
 
 
 @click.command()
-@click.argument('recipe')
+@click.argument('recipe_location')
 @click.option(
     "-i",
     "--input-dir",
@@ -74,7 +74,7 @@ from spekulatio.lib.parse_values import parse_values_from_string
     help="Set the logging level (debug, info, warning, error, critical)"
 )
 def build(
-    recipe,
+    recipe_location,
     input_dir,
     output_dir,
     value_strings,
@@ -117,14 +117,13 @@ def build(
         value_overrides.append(values_from_string)
 
     # set paths
-    recipe_path = Path(recipe)
     input_path = Path(input_dir) if input_dir else None
     output_path = Path(output_dir)
     search_paths = [Path.cwd()] + search_recipe_paths
 
     # build!
     build_operation(
-        recipe_path,
+        recipe_location,
         output_path,
         input_path,
         search_paths,
